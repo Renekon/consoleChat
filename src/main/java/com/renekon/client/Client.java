@@ -1,12 +1,12 @@
 package com.renekon.client;
 
-import com.renekon.shared.connection.Connection;
-import com.renekon.shared.connection.buffer.MessageBuffer;
 import com.renekon.shared.message.Message;
 import com.renekon.shared.message.MessageFactory;
 import com.renekon.shared.message.MessageType;
 import com.renekon.shared.message.handler.MessageHandler;
 import com.renekon.shared.message.handler.MessageHandlerFactory;
+import com.renekon.shared.connection.Connection;
+import com.renekon.shared.connection.buffer.MessageBuffer;
 
 import java.io.IOException;
 import java.util.Scanner;
@@ -26,8 +26,11 @@ public class Client implements Runnable {
     public Client(Connection connection) {
         this.connection = connection;
         this.inputThread = new Thread(() -> {
-            while (acceptInput)
-                sendMessage(MessageFactory.createUserTextMessage(connection.name, readInput()));
+            while (acceptInput) {
+                String input = readInput();
+                if (!input.isEmpty())
+                    sendMessage(MessageFactory.createUserTextMessage(connection.name, input));
+            }
         });
         registerMessageHandlers();
     }
@@ -46,7 +49,6 @@ public class Client implements Runnable {
     private void sendMessage(Message message){
         connection.write(message.getBytes());
         writeToChannel();
-
     }
 
     private void startToAcceptInput() {
@@ -61,8 +63,6 @@ public class Client implements Runnable {
         while (running) {
             if (connection.canRead())
                 readFromChannel();
-            else if (connection.canWrite())
-                writeToChannel();
         }
         displayText("Disconnected from server. Input anything to exit.");
         stopToAcceptInput();
@@ -86,12 +86,12 @@ public class Client implements Runnable {
         }
 
         MessageBuffer messageBuffer = connection.messageBuffer;
-        messageBuffer.put(connection.getData());
+        messageBuffer.put(connection.readData());
         byte[] messageData = messageBuffer.getNextMessage();
         while (messageData != null) {
             Message message = MessageFactory.createFromBytes(messageData);
             if (message.getText() != null)
-                displayText(message.getPrintText());
+                displayText(message.getTextWithAuthor());
             MessageHandler handler = messageHandlers.get(message.getType());
             if (handler != null) {
                 handler.execute(message, connection);
@@ -108,11 +108,11 @@ public class Client implements Runnable {
         }
     }
 
-    private void displayText(String text) {
+    void displayText(String text) {
         System.out.println(text);
     }
 
-    public String readInput() {
+    String readInput() {
         return scanner.nextLine();
     }
 

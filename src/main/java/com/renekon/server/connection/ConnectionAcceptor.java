@@ -1,8 +1,8 @@
 package com.renekon.server.connection;
 
+import com.renekon.shared.message.MessageFactory;
 import com.renekon.shared.connection.Connection;
 import com.renekon.shared.connection.buffer.ChatMessageBuffer;
-import com.renekon.shared.message.MessageFactory;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Level;

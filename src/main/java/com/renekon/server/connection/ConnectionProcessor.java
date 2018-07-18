@@ -2,18 +2,19 @@ package com.renekon.server.connection;
 
 import com.renekon.server.command.Command;
 import com.renekon.server.command.CommandFactory;
-import com.renekon.shared.connection.Connection;
-import com.renekon.shared.connection.event.ConnectionEvent;
-import com.renekon.shared.connection.event.DataReceivedEvent;
 import com.renekon.shared.message.Message;
 import com.renekon.shared.message.MessageFactory;
 import com.renekon.shared.message.MessageType;
 import com.renekon.shared.message.handler.MessageHandler;
 import com.renekon.shared.message.handler.MessageHandlerFactory;
-import org.apache.commons.collections4.queue.CircularFifoQueue;
+import com.renekon.shared.connection.Connection;
+import com.renekon.shared.connection.event.ConnectionEvent;
+import com.renekon.shared.connection.event.DataReceivedEvent;
 
+import java.util.Iterator;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -26,14 +27,14 @@ public class ConnectionProcessor implements Runnable {
 
     private final MessageHandlerFactory messageHandlers = new MessageHandlerFactory();
 
-    private final CircularFifoQueue<byte[]> messageHistory;
+    private final ConcurrentLinkedQueue<byte[]> messageHistory;
 
     public ConnectionProcessor(ArrayBlockingQueue<ConnectionEvent> connectionEvents,
                                ConcurrentHashMap<String, Connection> knownConnections) {
         this.connectionEvents = connectionEvents;
         this.knownConnections = knownConnections;
 
-        messageHistory = new CircularFifoQueue<>(HISTORY_SIZE);
+        messageHistory = new ConcurrentLinkedQueue<>();
         registerMessageHandlers();
     }
 
@@ -62,7 +63,7 @@ public class ConnectionProcessor implements Runnable {
             Command command = CommandFactory.fromString((message.getText()));
             if (command != null) {
                 command.execute(connection, knownConnections.values());
-            } else {
+            } else if (!message.getText().isEmpty()) {
                 synchronized (messageHistory) {
                     messageHistory.add(message.getBytes());
                 }
@@ -129,9 +130,11 @@ public class ConnectionProcessor implements Runnable {
             knownConnections.put(name, connection);
             shareMessage(MessageFactory.createServerTextMessage(name + " joined the chat!"));
             synchronized (messageHistory) {
-                for (byte[] message : messageHistory) {
-                    connection.write(message);
+                Iterator<byte[]> iterator = messageHistory.iterator();
+                for (int i = 0; i < HISTORY_SIZE && iterator.hasNext(); i++) {
+                    connection.write(iterator.next());
                 }
+
             }
             LOGGER.info(String.format("User %d is registered as %s", knownConnections.size(), name));
         }
@@ -155,11 +158,11 @@ public class ConnectionProcessor implements Runnable {
         } else if (knownConnections.containsKey(newName)) {
             sendServerMessage(connection, "The name is already used");
         } else {
-            sendNameAcceptedMessage(connection, newName);
             String oldName = connection.name;
             knownConnections.remove(connection.name);
             connection.name = newName;
             knownConnections.put(connection.name, connection);
+            sendNameAcceptedMessage(connection, newName);
             shareMessage(MessageFactory.createServerTextMessage(String.format("%s is now %s.", oldName, newName)));
             LOGGER.info(String.format("User %s is renamed to %s", oldName, newName));
         }

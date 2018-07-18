@@ -1,10 +1,10 @@
-package com.renekon.shared.message;
+package com.renekon.shared.connection.buffer;
 
-import com.renekon.shared.connection.buffer.ChatMessageBuffer;
+import com.renekon.shared.message.Message;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-class ServerMessageBufferTest {
+class ChatMessageBufferTest {
     @Test
     void testPutAndGetNext() {
         ChatMessageBuffer buffer = new ChatMessageBuffer();
@@ -20,7 +20,7 @@ class ServerMessageBufferTest {
         Assertions.assertArrayEquals(m2, buffer.getNextMessage());
         Assertions.assertNull(buffer.getNextMessage());
 
-        buffer.put(new byte[] {5, Message.MESSAGE_END});
+        buffer.put(new byte[]{5, Message.MESSAGE_END});
         byte[] m3 = {2, 3, 4, 5, Message.MESSAGE_END};
         Assertions.assertArrayEquals(m3, buffer.getNextMessage());
     }

@@ -1,34 +1,34 @@
 package com.renekon.shared.message;
 
 
-
 public class MessageFactory {
 
     private final static String SERVER_MESSAGE_AUTHOR = "SERVER";
 
-    public static class InvalidMessageException extends RuntimeException {}
+    static class InvalidMessageException extends RuntimeException {
+    }
 
-    public static Message createNameAcceptedMessage(String name){
+    public static Message createNameAcceptedMessage(String name) {
         return new ChatMessage(MessageType.NAME_ACCEPTED, name, null);
     }
 
-    public static Message createNameRequestMessage(){
+    public static Message createNameRequestMessage() {
         return new ChatMessage(MessageType.NAME_REQUEST, SERVER_MESSAGE_AUTHOR);
     }
 
-    public static Message createServerTextMessage(String text){
+    public static Message createServerTextMessage(String text) {
         return new ChatMessage(MessageType.SERVER_TEXT, SERVER_MESSAGE_AUTHOR, text);
     }
 
-    public static Message createDisconnectMessage(){
+    public static Message createDisconnectMessage() {
         return new ChatMessage(MessageType.DISCONNECT, SERVER_MESSAGE_AUTHOR);
     }
 
-    public static Message createNameSentMessage(String name){
+    public static Message createNameSentMessage(String name) {
         return new ChatMessage(MessageType.NAME_SENT, name);
     }
 
-    public static Message createUserTextMessage(String name, String message){
+    public static Message createUserTextMessage(String name, String message) {
         return new ChatMessage(MessageType.USER_TEXT, name, message);
     }
 

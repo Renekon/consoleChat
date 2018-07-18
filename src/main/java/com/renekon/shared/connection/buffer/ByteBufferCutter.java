@@ -3,8 +3,8 @@ package com.renekon.shared.connection.buffer;
 import java.nio.ByteBuffer;
 import java.nio.InvalidMarkException;
 
-public class ByteBufferCutter {
-    public static byte[] cut(ByteBuffer buffer, byte stopByte) {
+class ByteBufferCutter {
+    static byte[] cut(ByteBuffer buffer, byte stopByte) {
         int currentPosition = buffer.position();
         try {
             buffer.reset();

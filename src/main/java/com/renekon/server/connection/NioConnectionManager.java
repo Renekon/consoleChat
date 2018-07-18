@@ -1,6 +1,8 @@
 package com.renekon.server.connection;
 
-import com.renekon.shared.connection.*;
+import com.renekon.shared.connection.Connection;
+import com.renekon.shared.connection.ModeChangeRequestQueue;
+import com.renekon.shared.connection.NioSocketConnection;
 import com.renekon.shared.connection.event.CloseConnectionEvent;
 import com.renekon.shared.connection.event.ConnectionEvent;
 import com.renekon.shared.connection.event.DataReceivedEvent;
@@ -19,10 +21,10 @@ import java.util.logging.Logger;
 public class NioConnectionManager implements ConnectionManager {
     private static final Logger LOGGER = Logger.getLogger(NioConnectionManager.class.getName());
 
-    private final Selector selector;
+    final Selector selector;
 
     private ArrayBlockingQueue<Connection> newConnections;
-    private ArrayBlockingQueue<ConnectionEvent> connectionEvents;
+    ArrayBlockingQueue<ConnectionEvent> connectionEvents;
     private final ModeChangeRequestQueue modeChangeRequestQueue;
 
     public NioConnectionManager(InetSocketAddress address) throws IOException {
@@ -103,7 +105,7 @@ public class NioConnectionManager implements ConnectionManager {
             key.cancel();
             close(connection);
         } catch (InterruptedException e) {
-            logWarning( "Interrupted while putting DATA ConnectionEvent");
+            logWarning("Interrupted while putting DATA ConnectionEvent");
         }
     }
 
@@ -132,11 +134,11 @@ public class NioConnectionManager implements ConnectionManager {
         }
     }
 
-    private void logWarning(String msg){
-        LOGGER.log(Level.WARNING,msg);
+    private void logWarning(String msg) {
+        LOGGER.log(Level.WARNING, msg);
     }
 
-    private void logWarning(String msg, Throwable e){
-        LOGGER.log(Level.WARNING,msg, e);
+    private void logWarning(String msg, Throwable e) {
+        LOGGER.log(Level.WARNING, msg, e);
     }
 }

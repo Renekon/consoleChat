@@ -11,7 +11,7 @@ import java.util.ArrayList;
 
 class StartLoadTest {
     private static final int PORT = 5000;
-    private static final int DEFAULT_BOT_COUNT = 100;
+    private static final int DEFAULT_BOT_COUNT = 2000;
 
     public static void main(String[] args) throws IOException {
         int botCount;

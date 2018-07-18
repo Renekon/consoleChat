@@ -77,24 +77,6 @@ public class NioSocketConnection extends Connection {
     }
 
     @Override
-    public boolean canWrite() {
-        try {
-            selector.select();
-        } catch (IOException e) {
-            return false;
-        }
-
-        Set<SelectionKey> selectedKeys = selector.selectedKeys();
-        Iterator<SelectionKey> iterator = selectedKeys.iterator();
-        if (iterator.hasNext()) {
-            SelectionKey key = iterator.next();
-            iterator.remove();
-            return key.isValid() && key.isWritable();
-        }
-        return false;
-    }
-
-    @Override
     public void write(byte[] src) {
         writeBuffers.add(ByteBuffer.wrap(src));
         if (this.mode == Mode.READ) {
@@ -105,7 +87,7 @@ public class NioSocketConnection extends Connection {
     }
 
     @Override
-    public byte[] getData() {
+    public byte[] readData() {
         readBuffer.flip();
         byte[] ret = new byte[readBuffer.limit()];
         readBuffer.get(ret);
@@ -129,8 +111,9 @@ public class NioSocketConnection extends Connection {
         }
     }
 
-    public int readFromChannel() throws IOException {
-        int bytesRead = channel.read(readBuffer);
+    @Override
+    public void readFromChannel() throws IOException {
+        channel.read(readBuffer);
         if (readBuffer.position() == readBuffer.capacity()) {
             readBuffer.rewind();
             ByteBuffer newBuffer = ByteBuffer.allocate(RESIZE_FACTOR * readBuffer.capacity());
@@ -138,7 +121,6 @@ public class NioSocketConnection extends Connection {
             readBuffer = newBuffer;
         }
         modeChangeRequestQueue.add(new ModeChangeRequest(this, SelectionKey.OP_WRITE));
-        return bytesRead;
     }
 
     public boolean nothingToWrite() {

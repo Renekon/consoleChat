@@ -7,7 +7,7 @@ import java.util.regex.Pattern;
 
 public interface Command {
 
-    Pattern COMMAND_PATTERN = Pattern.compile("\\s*\\\\.*$");
+    Pattern COMMAND_PATTERN = Pattern.compile("/.*");
 
     Pattern getPattern();
 

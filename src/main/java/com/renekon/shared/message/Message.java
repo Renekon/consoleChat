@@ -13,7 +13,7 @@ public interface Message {
 
     String getText();
 
-    String getPrintText();
+    String getTextWithAuthor();
 
     String getAuthor();
 }

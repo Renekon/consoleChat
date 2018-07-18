@@ -1,7 +1,7 @@
 package com.renekon.server;
 
-import com.renekon.server.connection.ConnectionManager;
 import com.renekon.server.connection.ConnectionAcceptor;
+import com.renekon.server.connection.ConnectionManager;
 import com.renekon.server.connection.ConnectionProcessor;
 import com.renekon.shared.connection.Connection;
 import com.renekon.shared.connection.event.ConnectionEvent;
@@ -13,7 +13,6 @@ public class Server {
     private final ConnectionManager connectionManager;
     private final ArrayBlockingQueue<Connection> newConnectionQueue;
     private final ArrayBlockingQueue<ConnectionEvent> connectionEventQueue;
-
 
     public Server(ConnectionManager connectionManager, int newConnectionQueueCapacity, int connectionEventQueueCapacity) {
         this.connectionManager = connectionManager;

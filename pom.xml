@@ -5,8 +5,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>renekon</groupId>
-    <artifactId>server</artifactId>
-    <version>0.1</version>
+    <artifactId>chat</artifactId>
+    <version>0.9</version>
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
@@ -14,11 +14,6 @@
     </properties>
 
     <dependencies>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-collections4</artifactId>
-            <version>4.0</version>
-        </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>

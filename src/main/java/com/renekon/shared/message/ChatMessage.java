@@ -1,12 +1,12 @@
 package com.renekon.shared.message;
 
-public class ChatMessage implements Message{
+public class ChatMessage implements Message {
 
     private MessageType type;
     private String author;
     private String text;
 
-    ChatMessage(MessageType type, String author){
+    ChatMessage(MessageType type, String author) {
         this.author = author;
         this.type = type;
     }
@@ -35,7 +35,7 @@ public class ChatMessage implements Message{
     }
 
     @Override
-    public String getPrintText() {
+    public String getTextWithAuthor() {
         return author + ": " + text;
     }
 

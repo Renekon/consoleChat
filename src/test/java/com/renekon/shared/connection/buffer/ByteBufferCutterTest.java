@@ -1,10 +1,9 @@
-package com.renekon.shared.message;
+package com.renekon.shared.connection.buffer;
 
-import java.nio.ByteBuffer;
-
-import com.renekon.shared.connection.buffer.ByteBufferCutter;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+
+import java.nio.ByteBuffer;
 
 class ByteBufferCutterTest {
     static private final byte STOP_BYTE = 0x1E;
@@ -13,7 +12,7 @@ class ByteBufferCutterTest {
     void emptyBuffer() {
         ByteBuffer buffer = ByteBuffer.allocate(1);
         byte[] result = ByteBufferCutter.cut(buffer, STOP_BYTE);
-        Assertions.assertEquals(null, result);
+        Assertions.assertNull(result);
         Assertions.assertEquals(buffer.position(), 0);
         Assertions.assertEquals(buffer.capacity(), buffer.limit());
     }
@@ -25,7 +24,7 @@ class ByteBufferCutterTest {
         buffer.put(bytes);
         byte[] result = ByteBufferCutter.cut(buffer, STOP_BYTE);
 
-        Assertions.assertEquals(null, result);
+        Assertions.assertNull(result);
         Assertions.assertEquals(buffer.position(), bytes.length);
         Assertions.assertEquals(buffer.capacity(), buffer.limit());
     }
@@ -55,7 +54,7 @@ class ByteBufferCutterTest {
         Assertions.assertEquals(buffer.capacity(), buffer.limit());
 
         result = ByteBufferCutter.cut(buffer, STOP_BYTE);
-        Assertions.assertEquals(null, result);
+        Assertions.assertNull(result);
         Assertions.assertEquals(2, buffer.position());
         Assertions.assertEquals(buffer.capacity(), buffer.limit());
     }
@@ -73,7 +72,7 @@ class ByteBufferCutterTest {
         Assertions.assertEquals(buffer.capacity(), buffer.limit());
 
         result = ByteBufferCutter.cut(buffer, STOP_BYTE);
-        truth = new byte[] {2, 3, STOP_BYTE};
+        truth = new byte[]{2, 3, STOP_BYTE};
         Assertions.assertArrayEquals(truth, result);
         Assertions.assertEquals(3, buffer.position());
         Assertions.assertEquals(buffer.capacity(), buffer.limit());

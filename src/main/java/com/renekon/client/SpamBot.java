@@ -2,14 +2,14 @@ package com.renekon.client;
 
 import com.renekon.shared.connection.Connection;
 
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
-public class SpamBot extends Client{
-    static private final String LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    static private final int MAX_WAIT_BEFORE_MESSAGE_MS = 10000;
+public class SpamBot extends Client {
+    static private final String LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    static private final int MAX_WAIT_BEFORE_MESSAGE_MS = 250;
     static private final int MAX_MESSAGE_LENGTH = 100;
 
-    private final Random rng;
+    private final ThreadLocalRandom rng;
 
     private String randomString(int length) {
         char[] letters = new char[length];
@@ -21,11 +21,11 @@ public class SpamBot extends Client{
 
     public SpamBot(Connection connection) {
         super(connection);
-        rng = new Random();
+        rng = ThreadLocalRandom.current();
     }
 
     @Override
-    public String readInput() {
+    String readInput() {
         try {
             Thread.sleep(rng.nextInt(MAX_WAIT_BEFORE_MESSAGE_MS));
         } catch (InterruptedException ignored) {
@@ -36,13 +36,17 @@ public class SpamBot extends Client{
             case 0:
                 return "\\help";
             case 1:
-                return "\\list";
+                return "\\userslist";
             case 2:
-                return "\\name " + randomString(10);
+                return "\\changename " + randomString(10);
             case 3:
-                return "\\exit";
+                return "\\quit";
             default:
                 return randomString(rng.nextInt(MAX_MESSAGE_LENGTH));
         }
+    }
+
+    @Override
+    void displayText(String text) {
     }
 }

@@ -1,7 +1,5 @@
 package com.renekon.shared.message.handler;
 
-
-
 import com.renekon.shared.message.MessageType;
 
 import java.util.HashMap;

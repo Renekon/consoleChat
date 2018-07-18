@@ -11,17 +11,19 @@ public abstract class Connection {
     private volatile boolean shouldClose = false;
 
     public abstract boolean canRead();
-    public abstract boolean canWrite();
 
     public abstract void write(byte[] data);
-    public abstract byte[] getData();
+
+    public abstract byte[] readData();
 
     public abstract void writeToChannel() throws IOException;
-    public abstract int readFromChannel() throws IOException;
+
+    public abstract void readFromChannel() throws IOException;
 
     public void requestClose() {
         shouldClose = true;
     }
+
     public boolean shouldClose() {
         return shouldClose;
     }

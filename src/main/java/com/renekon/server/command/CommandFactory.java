@@ -14,14 +14,12 @@ public class CommandFactory {
             new QuitCommand()
     );
 
-
-
     public static Command fromString(String string) {
         if (!Command.COMMAND_PATTERN.matcher(string).matches()) {
             return null;
         }
 
-        for (Command command: staticKnownCommands){
+        for (Command command : staticKnownCommands) {
             if (command.getPattern().matcher(string).matches())
                 return command;
         }
@@ -31,5 +29,4 @@ public class CommandFactory {
 
         return unknown;
     }
-
 }

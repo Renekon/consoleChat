@@ -1,17 +1,15 @@
 package com.renekon.server.command;
 
-import com.renekon.shared.connection.Connection;
 import com.renekon.shared.message.MessageFactory;
+import com.renekon.shared.connection.Connection;
 
 import java.util.Collection;
 import java.util.regex.Pattern;
 
 public class HelpCommand implements Command {
-    private final Pattern PATTERN = Pattern.compile("\\s*\\\\help\\s*$");
-    public static final String DESCRIPTION = "\\help --- show help";
 
-    public HelpCommand() {
-    }
+    private final Pattern PATTERN = Pattern.compile("/help");
+    private static final String DESCRIPTION = "/help --- show help";
 
     @Override
     public Pattern getPattern() {

@@ -13,7 +13,7 @@ public class ModeChangeRequestQueue {
         this.selector = selector;
     }
 
-    public void add(ModeChangeRequest request) {
+    void add(ModeChangeRequest request) {
         queue.add(request);
     }
 
