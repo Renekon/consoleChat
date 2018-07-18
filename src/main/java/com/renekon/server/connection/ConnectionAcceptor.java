@@ -1,4 +1,4 @@
-package com.renekon.server.chat;
+package com.renekon.server.connection;
 
 import com.renekon.shared.connection.Connection;
 import com.renekon.shared.connection.buffer.ChatMessageBuffer;
@@ -8,12 +8,12 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-class ConnectionAcceptor implements Runnable {
+public class ConnectionAcceptor implements Runnable {
     private static final Logger LOGGER = Logger.getLogger(ConnectionAcceptor.class.getName());
 
     private final ArrayBlockingQueue<Connection> newConnections;
 
-    ConnectionAcceptor(ArrayBlockingQueue<Connection> newConnections) {
+    public ConnectionAcceptor(ArrayBlockingQueue<Connection> newConnections) {
         this.newConnections = newConnections;
     }
 

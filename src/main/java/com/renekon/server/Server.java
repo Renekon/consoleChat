@@ -1,26 +1,40 @@
 package com.renekon.server;
 
+import com.renekon.server.connection.ConnectionManager;
+import com.renekon.server.connection.ConnectionAcceptor;
+import com.renekon.server.connection.ConnectionProcessor;
 import com.renekon.shared.connection.Connection;
 import com.renekon.shared.connection.event.ConnectionEvent;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 
-public abstract class Server {
-    protected final InetSocketAddress address;
-    protected ArrayBlockingQueue<Connection> newConnections = null;
-    protected ArrayBlockingQueue<ConnectionEvent> connectionEvents = null;
+public class Server {
+    private final ConnectionManager connectionManager;
+    private final ArrayBlockingQueue<Connection> newConnectionQueue;
+    private final ArrayBlockingQueue<ConnectionEvent> connectionEventQueue;
 
-    public Server(InetSocketAddress address) {
-        this.address = address;
+
+    public Server(ConnectionManager connectionManager, int newConnectionQueueCapacity, int connectionEventQueueCapacity) {
+        this.connectionManager = connectionManager;
+        newConnectionQueue = new ArrayBlockingQueue<>(newConnectionQueueCapacity);
+        connectionEventQueue = new ArrayBlockingQueue<>(connectionEventQueueCapacity);
     }
 
-    public void bindConnectionQueues(ArrayBlockingQueue<Connection> newConnectionQueue,
-                              ArrayBlockingQueue<ConnectionEvent> connectionEventsQueue) {
-        this.newConnections = newConnectionQueue;
-        this.connectionEvents = connectionEventsQueue;
-    }
+    public void start(int numProcessorThreads) {
+        connectionManager.bindConnectionQueues(newConnectionQueue, connectionEventQueue);
+        Thread selectionThread = new Thread(connectionManager, "connectionManager");
+        selectionThread.start();
 
-    public abstract void start() throws IOException;
+        ConnectionAcceptor connectionAcceptor = new ConnectionAcceptor(newConnectionQueue);
+        Thread connectionAcceptorThread = new Thread(connectionAcceptor, "ConnectionAcceptor");
+        connectionAcceptorThread.start();
+
+        ConcurrentHashMap<String, Connection> knownConnections = new ConcurrentHashMap<>();
+        for (int t = 0; t < numProcessorThreads; ++t) {
+            ConnectionProcessor connectionProcessor = new ConnectionProcessor(connectionEventQueue, knownConnections);
+            Thread connectionProcessorThread = new Thread(connectionProcessor, "ConnectionProcessor-" + t);
+            connectionProcessorThread.start();
+        }
+    }
 }

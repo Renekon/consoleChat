@@ -1,5 +1,7 @@
 package com.renekon.client;
 
+import com.renekon.shared.connection.Connection;
+
 import java.util.Random;
 
 public class SpamBot extends Client{
@@ -17,7 +19,8 @@ public class SpamBot extends Client{
         return new String(letters);
     }
 
-    public SpamBot() {
+    public SpamBot(Connection connection) {
+        super(connection);
         rng = new Random();
     }
 
@@ -25,7 +28,7 @@ public class SpamBot extends Client{
     public String readInput() {
         try {
             Thread.sleep(rng.nextInt(MAX_WAIT_BEFORE_MESSAGE_MS));
-        } catch (InterruptedException e) {
+        } catch (InterruptedException ignored) {
         }
 
         int action = rng.nextInt(10);

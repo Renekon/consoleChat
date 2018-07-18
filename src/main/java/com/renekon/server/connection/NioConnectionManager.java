@@ -1,4 +1,4 @@
-package com.renekon.server;
+package com.renekon.server.connection;
 
 import com.renekon.shared.connection.*;
 import com.renekon.shared.connection.event.CloseConnectionEvent;
@@ -6,6 +6,7 @@ import com.renekon.shared.connection.event.ConnectionEvent;
 import com.renekon.shared.connection.event.DataReceivedEvent;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
@@ -15,32 +16,35 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-class SelectionLoop implements Runnable {
-    private static final Logger LOGGER = Logger.getLogger(SelectionLoop.class.getName());
+public class NioConnectionManager implements ConnectionManager {
+    private static final Logger LOGGER = Logger.getLogger(NioConnectionManager.class.getName());
 
     private final Selector selector;
 
-    private final ArrayBlockingQueue<Connection> newConnections;
-    private final ArrayBlockingQueue<ConnectionEvent> connectionEvents;
+    private ArrayBlockingQueue<Connection> newConnections;
+    private ArrayBlockingQueue<ConnectionEvent> connectionEvents;
     private final ModeChangeRequestQueue modeChangeRequestQueue;
 
-    SelectionLoop(ServerSocketChannel serverSocketChannel,
-                  ArrayBlockingQueue<Connection> newConnections,
-                  ArrayBlockingQueue<ConnectionEvent> connectionEvents) throws IOException {
-        serverSocketChannel.configureBlocking(false);
+    public NioConnectionManager(InetSocketAddress address) throws IOException {
+        ServerSocketChannel serverChannel = ServerSocketChannel.open();
+        serverChannel.bind(address);
+        serverChannel.configureBlocking(false);
         this.selector = Selector.open();
-        serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
+        serverChannel.register(selector, SelectionKey.OP_ACCEPT);
 
-        this.newConnections = newConnections;
-        this.connectionEvents = connectionEvents;
         this.modeChangeRequestQueue = new ModeChangeRequestQueue(this.selector);
+    }
+
+    @Override
+    public void bindConnectionQueues(ArrayBlockingQueue<Connection> newConnectionQueue, ArrayBlockingQueue<ConnectionEvent> connectionEventsQueue) {
+        this.newConnections = newConnectionQueue;
+        this.connectionEvents = connectionEventsQueue;
     }
 
     @Override
     public void run() {
         while (true) {
             modeChangeRequestQueue.process();
-
             try {
                 selector.select();
             } catch (IOException e) {

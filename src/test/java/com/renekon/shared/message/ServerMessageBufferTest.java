@@ -4,7 +4,7 @@ import com.renekon.shared.connection.buffer.ChatMessageBuffer;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-class ChatMessageBufferTest {
+class ServerMessageBufferTest {
     @Test
     void testPutAndGetNext() {
         ChatMessageBuffer buffer = new ChatMessageBuffer();
@@ -18,7 +18,7 @@ class ChatMessageBufferTest {
 
         Assertions.assertArrayEquals(m1, buffer.getNextMessage());
         Assertions.assertArrayEquals(m2, buffer.getNextMessage());
-        Assertions.assertEquals(null, buffer.getNextMessage());
+        Assertions.assertNull(buffer.getNextMessage());
 
         buffer.put(new byte[] {5, Message.MESSAGE_END});
         byte[] m3 = {2, 3, 4, 5, Message.MESSAGE_END};

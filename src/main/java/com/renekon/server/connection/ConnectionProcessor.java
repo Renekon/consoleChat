@@ -1,4 +1,4 @@
-package com.renekon.server.chat;
+package com.renekon.server.connection;
 
 import com.renekon.server.command.Command;
 import com.renekon.server.command.CommandFactory;
@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-class ConnectionProcessor implements Runnable {
+public class ConnectionProcessor implements Runnable {
     private static final Logger LOGGER = Logger.getLogger(ConnectionProcessor.class.getName());
     private static final int HISTORY_SIZE = 100;
 
@@ -28,8 +28,8 @@ class ConnectionProcessor implements Runnable {
 
     private final CircularFifoQueue<byte[]> messageHistory;
 
-    ConnectionProcessor(ArrayBlockingQueue<ConnectionEvent> connectionEvents,
-                        ConcurrentHashMap<String, Connection> knownConnections) {
+    public ConnectionProcessor(ArrayBlockingQueue<ConnectionEvent> connectionEvents,
+                               ConcurrentHashMap<String, Connection> knownConnections) {
         this.connectionEvents = connectionEvents;
         this.knownConnections = knownConnections;
 
@@ -82,7 +82,6 @@ class ConnectionProcessor implements Runnable {
                     handleClose(connectionEvent.connection);
             } catch (InterruptedException e) {
                 LOGGER.log(Level.WARNING, "Interrupted while taking ConnectionEvent from queue", e);
-                continue;
             }
         }
     }

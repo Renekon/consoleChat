@@ -1,10 +1,15 @@
 package com.renekon.shared.connection;
 
+import com.renekon.shared.connection.buffer.ChatMessageBuffer;
+
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
+import java.util.Iterator;
+import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
 public class NioSocketConnection extends Connection {
@@ -23,8 +28,23 @@ public class NioSocketConnection extends Connection {
 
     private Mode mode;
 
+    public NioSocketConnection(InetSocketAddress address) throws IOException {
+        selector = Selector.open();
+        channel = SocketChannel.open();
+        channel.connect(address);
+        channel.configureBlocking(false);
+        channel.register(selector, SelectionKey.OP_READ, this);
+        modeChangeRequestQueue = new ModeChangeRequestQueue(selector);
+        this.writeBuffers = new ConcurrentLinkedDeque<>();
+        this.readBuffer = ByteBuffer.allocate(INITIAL_READ_BUFFER_CAPACITY);
+        this.mode = Mode.READ;
+        this.messageBuffer = new ChatMessageBuffer();
+
+    }
+
     public NioSocketConnection(Selector selector, SocketChannel channel,
                                ModeChangeRequestQueue modeChangeRequestQueue) throws IOException {
+
         channel.configureBlocking(false);
         channel.register(selector, SelectionKey.OP_READ, this);
 
@@ -36,6 +56,42 @@ public class NioSocketConnection extends Connection {
         this.readBuffer = ByteBuffer.allocate(INITIAL_READ_BUFFER_CAPACITY);
 
         this.mode = Mode.READ;
+    }
+
+    @Override
+    public boolean canRead() {
+        try {
+            selector.select();
+        } catch (IOException e) {
+            return false;
+        }
+
+        Set<SelectionKey> selectedKeys = selector.selectedKeys();
+        Iterator<SelectionKey> iterator = selectedKeys.iterator();
+        if (iterator.hasNext()) {
+            SelectionKey key = iterator.next();
+            iterator.remove();
+            return key.isValid() && key.isReadable();
+        }
+        return false;
+    }
+
+    @Override
+    public boolean canWrite() {
+        try {
+            selector.select();
+        } catch (IOException e) {
+            return false;
+        }
+
+        Set<SelectionKey> selectedKeys = selector.selectedKeys();
+        Iterator<SelectionKey> iterator = selectedKeys.iterator();
+        if (iterator.hasNext()) {
+            SelectionKey key = iterator.next();
+            iterator.remove();
+            return key.isValid() && key.isWritable();
+        }
+        return false;
     }
 
     @Override
@@ -57,6 +113,7 @@ public class NioSocketConnection extends Connection {
         return ret;
     }
 
+    @Override
     public void writeToChannel() throws IOException {
         while (!writeBuffers.isEmpty()) {
             ByteBuffer head = writeBuffers.peek();
@@ -80,6 +137,7 @@ public class NioSocketConnection extends Connection {
             newBuffer.put(readBuffer);
             readBuffer = newBuffer;
         }
+        modeChangeRequestQueue.add(new ModeChangeRequest(this, SelectionKey.OP_WRITE));
         return bytesRead;
     }
 

@@ -2,6 +2,8 @@ package com.renekon.starter;
 
 import com.renekon.client.Client;
 import com.renekon.client.SpamBot;
+import com.renekon.shared.connection.Connection;
+import com.renekon.shared.connection.NioSocketConnection;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -21,9 +23,9 @@ class StartLoadTest {
 
         ArrayList<Client> clients = new ArrayList<>();
         for (int i = 0; i < botCount; ++i) {
-            Client client = new SpamBot();
+            Connection connection = new NioSocketConnection(new InetSocketAddress(PORT));
+            Client client = new SpamBot(connection);
             clients.add(client);
-            client.connect(new InetSocketAddress(PORT));
             Thread t = new Thread(client);
             t.start();
         }
