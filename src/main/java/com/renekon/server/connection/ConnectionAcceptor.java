@@ -1,8 +1,6 @@
 package com.renekon.server.connection;
 
-import com.renekon.shared.message.MessageFactory;
 import com.renekon.shared.connection.Connection;
-import com.renekon.shared.connection.buffer.ChatMessageBuffer;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Level;
@@ -27,9 +25,8 @@ public class ConnectionAcceptor implements Runnable {
                 LOGGER.log(Level.WARNING, "Interrupting while taking connection from queue", e);
                 continue;
             }
-            connection.messageBuffer = new ChatMessageBuffer();
-            connection.write(MessageFactory.createServerTextMessage("Hello! What is your name?").getBytes());
-            connection.write(MessageFactory.createNameRequestMessage().getBytes());
+            connection.write(connection.messageFactory.createServerTextMessage("Hello! What is your name?"));
+            connection.write(connection.messageFactory.createNameRequestMessage());
         }
     }
 }

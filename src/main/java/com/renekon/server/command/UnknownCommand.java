@@ -1,6 +1,5 @@
 package com.renekon.server.command;
 
-import com.renekon.shared.message.MessageFactory;
 import com.renekon.shared.connection.Connection;
 
 import java.util.Collection;
@@ -15,6 +14,6 @@ class UnknownCommand implements Command {
 
     @Override
     public void execute(Connection connection, Collection<Connection> knownConnections) {
-        connection.write(MessageFactory.createServerTextMessage("There is no such command. Type /help to see the list").getBytes());
+        connection.write(connection.messageFactory.createServerTextMessage("There is no such command. Type /help to see the list"));
     }
 }

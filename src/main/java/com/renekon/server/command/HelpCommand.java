@@ -1,6 +1,5 @@
 package com.renekon.server.command;
 
-import com.renekon.shared.message.MessageFactory;
 import com.renekon.shared.connection.Connection;
 
 import java.util.Collection;
@@ -26,6 +25,6 @@ public class HelpCommand implements Command {
                 QuitCommand.DESCRIPTION
         };
         String message = String.join("\n", lines);
-        connection.write(MessageFactory.createServerTextMessage(message).getBytes());
+        connection.write(connection.messageFactory.createServerTextMessage(message));
     }
 }

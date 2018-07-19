@@ -2,12 +2,14 @@ package com.renekon.shared.connection;
 
 import com.renekon.server.Server;
 import com.renekon.server.connection.NioConnectionManager;
+import com.renekon.shared.message.Message;
 import com.renekon.shared.message.MessageFactory;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.List;
 
 class NioSocketConnectionTest {
     @Test
@@ -26,7 +28,7 @@ class NioSocketConnectionTest {
         s.start(1);
         Connection c = new NioSocketConnection(address);
         Assertions.assertTrue(((NioSocketConnection) c).nothingToWrite());
-        c.write(MessageFactory.createNameRequestMessage().getBytes());
+        c.write(c.messageFactory.createNameRequestMessage());
         Assertions.assertFalse(((NioSocketConnection) c).nothingToWrite());
     }
 
@@ -37,12 +39,12 @@ class NioSocketConnectionTest {
         s.start(1);
 
         Connection c = new NioSocketConnection(address);
-        byte[] bytes = c.readData();
-        Assertions.assertEquals(bytes.length, 0);
+        List<Message> msg = c.readMessages();
+        Assertions.assertEquals(msg.size(), 0);
         Thread.sleep(500);
         c.readFromChannel();
-        bytes = c.readData();
-        Assertions.assertNotEquals(bytes.length, 0);
+        msg = c.readMessages();
+        Assertions.assertNotEquals(msg.size(), 0);
     }
 
     @Test
@@ -52,7 +54,7 @@ class NioSocketConnectionTest {
         s.start(1);
         Connection c = new NioSocketConnection(address);
 
-        c.write(MessageFactory.createNameRequestMessage().getBytes());
+        c.write(c.messageFactory.createNameRequestMessage());
         Assertions.assertFalse(((NioSocketConnection) c).nothingToWrite());
         c.writeToChannel();
         Assertions.assertTrue(((NioSocketConnection) c).nothingToWrite());

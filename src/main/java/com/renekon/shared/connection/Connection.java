@@ -1,20 +1,22 @@
 package com.renekon.shared.connection;
 
-import com.renekon.shared.connection.buffer.MessageBuffer;
+import com.renekon.shared.message.Message;
+import com.renekon.shared.message.MessageFactory;
 
 import java.io.IOException;
+import java.util.List;
 
 public abstract class Connection {
+    public MessageFactory messageFactory;
     public volatile String name = null;
-    public MessageBuffer messageBuffer = null;
 
     private volatile boolean shouldClose = false;
 
     public abstract boolean canRead();
 
-    public abstract void write(byte[] data);
+    public abstract void write(Message message);
 
-    public abstract byte[] readData();
+    public abstract List<Message> readMessages();
 
     public abstract void writeToChannel() throws IOException;
 

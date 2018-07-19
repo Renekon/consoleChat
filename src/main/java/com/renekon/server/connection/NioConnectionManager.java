@@ -22,6 +22,7 @@ public class NioConnectionManager implements ConnectionManager {
     private static final Logger LOGGER = Logger.getLogger(NioConnectionManager.class.getName());
 
     final Selector selector;
+    private SelectionKey currentSelectionKey;
 
     private ArrayBlockingQueue<Connection> newConnections;
     ArrayBlockingQueue<ConnectionEvent> connectionEvents;
@@ -33,7 +34,6 @@ public class NioConnectionManager implements ConnectionManager {
         serverChannel.configureBlocking(false);
         this.selector = Selector.open();
         serverChannel.register(selector, SelectionKey.OP_ACCEPT);
-
         this.modeChangeRequestQueue = new ModeChangeRequestQueue(this.selector);
     }
 
@@ -56,24 +56,25 @@ public class NioConnectionManager implements ConnectionManager {
 
             Iterator<SelectionKey> selectedKeys = selector.selectedKeys().iterator();
             while (selectedKeys.hasNext()) {
-                SelectionKey key = selectedKeys.next();
+                currentSelectionKey = selectedKeys.next();
                 selectedKeys.remove();
-                if (!key.isValid()) {
+                if (!currentSelectionKey.isValid()) {
                     continue;
                 }
-                if (key.isAcceptable()) {
-                    accept(key);
-                } else if (key.isReadable()) {
-                    read(key);
-                } else if (key.isWritable()) {
-                    write(key);
+                if (currentSelectionKey.isAcceptable()) {
+                    accept();
+                } else if (currentSelectionKey.isReadable()) {
+                    read();
+                } else if (currentSelectionKey.isWritable()) {
+                    write();
                 }
             }
         }
     }
 
-    private void accept(SelectionKey key) {
-        ServerSocketChannel serverSocketChannel = (ServerSocketChannel) key.channel();
+    @Override
+    public void accept() {
+        ServerSocketChannel serverSocketChannel = (ServerSocketChannel) currentSelectionKey.channel();
 
         SocketChannel socketChannel;
         try {
@@ -95,22 +96,24 @@ public class NioConnectionManager implements ConnectionManager {
         }
     }
 
-    private void read(SelectionKey key) {
-        NioSocketConnection connection = (NioSocketConnection) key.attachment();
+    @Override
+    public void read() {
+        NioSocketConnection connection = (NioSocketConnection) currentSelectionKey.attachment();
 
         try {
             connection.readFromChannel();
             connectionEvents.put(new DataReceivedEvent(connection));
         } catch (IOException e) {
-            key.cancel();
+            currentSelectionKey.cancel();
             close(connection);
         } catch (InterruptedException e) {
             logWarning("Interrupted while putting DATA ConnectionEvent");
         }
     }
 
-    private void write(SelectionKey key) {
-        NioSocketConnection connection = (NioSocketConnection) key.attachment();
+    @Override
+    public void write() {
+        NioSocketConnection connection = (NioSocketConnection) currentSelectionKey.attachment();
         try {
             connection.writeToChannel();
         } catch (IOException e) {
@@ -123,9 +126,10 @@ public class NioConnectionManager implements ConnectionManager {
         }
     }
 
-    private void close(NioSocketConnection connection) {
+    @Override
+    public void close(Connection connection) {
         try {
-            connection.channel.close();
+            ((NioSocketConnection) connection).channel.close();
             connectionEvents.put(new CloseConnectionEvent(connection));
         } catch (IOException e) {
             logWarning("Error closing connection", e);

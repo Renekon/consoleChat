@@ -9,11 +9,7 @@ public interface Message {
 
     MessageType getType();
 
-    byte[] getBytes();
-
     String getText();
-
-    String getTextWithAuthor();
 
     String getAuthor();
 }

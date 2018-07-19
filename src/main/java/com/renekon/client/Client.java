@@ -1,81 +1,69 @@
 package com.renekon.client;
 
+import com.renekon.shared.connection.Connection;
 import com.renekon.shared.message.Message;
-import com.renekon.shared.message.MessageFactory;
 import com.renekon.shared.message.MessageType;
 import com.renekon.shared.message.handler.MessageHandler;
 import com.renekon.shared.message.handler.MessageHandlerFactory;
-import com.renekon.shared.connection.Connection;
-import com.renekon.shared.connection.buffer.MessageBuffer;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Scanner;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class Client implements Runnable {
     private final Scanner scanner = new Scanner(System.in);
     private Connection connection;
 
     private volatile boolean running;
-    private volatile boolean acceptInput;
 
-    private final Thread inputThread;
-
+    private ScheduledExecutorService executorService;
 
     private final MessageHandlerFactory messageHandlers = new MessageHandlerFactory();
 
     public Client(Connection connection) {
         this.connection = connection;
-        this.inputThread = new Thread(() -> {
-            while (acceptInput) {
-                String input = readInput();
-                if (!input.isEmpty())
-                    sendMessage(MessageFactory.createUserTextMessage(connection.name, input));
-            }
-        });
+        executorService = Executors.newSingleThreadScheduledExecutor();
+
         registerMessageHandlers();
     }
 
     private void registerMessageHandlers() {
         messageHandlers.register(MessageType.NAME_REQUEST, (message, connection) ->
-                sendMessage(MessageFactory.createNameSentMessage(readInput())));
+                sendMessage(connection.messageFactory.createNameSentMessage(readInput())));
         messageHandlers.register(MessageType.NAME_ACCEPTED, (message, connection) -> {
+            if (connection.name == null)
+                startInputScanner();
             connection.name = message.getAuthor();
-            startToAcceptInput();
         });
         messageHandlers.register(MessageType.NAME_SENT, (message, connection) -> sendMessage(message));
         messageHandlers.register(MessageType.DISCONNECT, (message, connection) -> stop());
     }
 
-    private void sendMessage(Message message){
-        connection.write(message.getBytes());
+    private void sendMessage(Message message) {
+        connection.write(message);
         writeToChannel();
     }
 
-    private void startToAcceptInput() {
-        if (!inputThread.isAlive()) {
-            acceptInput = true;
-            inputThread.start();
-        }
+    private void startInputScanner() {
+        executorService.scheduleWithFixedDelay(() -> {
+            if (scanner.hasNext())
+                sendMessage(connection.messageFactory.createUserTextMessage(connection.name, readInput()));
+        }, 100, 200, TimeUnit.MILLISECONDS);
     }
 
+    @Override
     public void run() {
         running = true;
         while (running) {
             if (connection.canRead())
                 readFromChannel();
         }
-        displayText("Disconnected from server. Input anything to exit.");
-        stopToAcceptInput();
-    }
-
-    private void stopToAcceptInput() {
-        acceptInput = false;
-        while (inputThread.isAlive()) {
-            try {
-                inputThread.join();
-            } catch (InterruptedException ignored) {
-            }
-        }
+        displayText("Disconnected from server");
+        executorService.shutdown();
+        System.exit(0);
     }
 
     private void readFromChannel() {
@@ -84,19 +72,14 @@ public class Client implements Runnable {
         } catch (IOException e) {
             stop();
         }
-
-        MessageBuffer messageBuffer = connection.messageBuffer;
-        messageBuffer.put(connection.readData());
-        byte[] messageData = messageBuffer.getNextMessage();
-        while (messageData != null) {
-            Message message = MessageFactory.createFromBytes(messageData);
+        List<Message> messages = connection.readMessages();
+        for (Message message : messages) {
             if (message.getText() != null)
-                displayText(message.getTextWithAuthor());
+                displayText(message.getAuthor() + ": " + message.getText());
             MessageHandler handler = messageHandlers.get(message.getType());
             if (handler != null) {
                 handler.execute(message, connection);
             }
-            messageData = messageBuffer.getNextMessage();
         }
     }
 

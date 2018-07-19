@@ -13,6 +13,6 @@ class StartNioServer {
     public static void main(String[] args) throws IOException {
         ConnectionManager connectionManager = new NioConnectionManager(new InetSocketAddress(PORT));
         Server server = new Server(connectionManager, 10, 100);
-        server.start(1);
+        server.start(8);
     }
 }

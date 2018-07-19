@@ -9,4 +9,12 @@ public interface ConnectionManager extends Runnable {
 
     void bindConnectionQueues(ArrayBlockingQueue<Connection> newConnectionQueue,
                               ArrayBlockingQueue<ConnectionEvent> connectionEventsQueue);
+
+    void accept();
+
+    void read();
+
+    void write();
+
+    void close(Connection connection);
 }

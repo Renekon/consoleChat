@@ -34,13 +34,13 @@ public class SpamBot extends Client {
         int action = rng.nextInt(10);
         switch (action) {
             case 0:
-                return "\\help";
+                return "/help";
             case 1:
-                return "\\userslist";
+                return "/userslist";
             case 2:
-                return "\\changename " + randomString(10);
+                return "/changename " + randomString(10);
             case 3:
-                return "\\quit";
+                return "/quit";
             default:
                 return randomString(rng.nextInt(MAX_MESSAGE_LENGTH));
         }

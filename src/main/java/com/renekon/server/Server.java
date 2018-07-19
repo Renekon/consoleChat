@@ -8,6 +8,8 @@ import com.renekon.shared.connection.event.ConnectionEvent;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Server {
     private final ConnectionManager connectionManager;
@@ -22,18 +24,17 @@ public class Server {
 
     public void start(int numProcessorThreads) {
         connectionManager.bindConnectionQueues(newConnectionQueue, connectionEventQueue);
-        Thread selectionThread = new Thread(connectionManager, "connectionManager");
-        selectionThread.start();
+
+        ExecutorService executorService = Executors.newFixedThreadPool(numProcessorThreads + 2);
+        executorService.execute(connectionManager);
 
         ConnectionAcceptor connectionAcceptor = new ConnectionAcceptor(newConnectionQueue);
-        Thread connectionAcceptorThread = new Thread(connectionAcceptor, "ConnectionAcceptor");
-        connectionAcceptorThread.start();
+        executorService.execute(connectionAcceptor);
 
         ConcurrentHashMap<String, Connection> knownConnections = new ConcurrentHashMap<>();
-        for (int t = 0; t < numProcessorThreads; ++t) {
+        for (int t = 0; t < numProcessorThreads; t++) {
             ConnectionProcessor connectionProcessor = new ConnectionProcessor(connectionEventQueue, knownConnections);
-            Thread connectionProcessorThread = new Thread(connectionProcessor, "ConnectionProcessor-" + t);
-            connectionProcessorThread.start();
+            executorService.execute(connectionProcessor);
         }
     }
 }

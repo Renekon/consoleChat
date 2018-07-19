@@ -1,6 +1,5 @@
 package com.renekon.server.command;
 
-import com.renekon.shared.message.MessageFactory;
 import com.renekon.shared.connection.Connection;
 
 import java.util.Collection;
@@ -28,6 +27,6 @@ public class ChangeNameCommand implements Command {
 
     @Override
     public void execute(Connection connection, Collection<Connection> knownConnections) {
-        connection.write(MessageFactory.createNameSentMessage(name).getBytes());
+        connection.write(connection.messageFactory.createNameSentMessage(name));
     }
 }

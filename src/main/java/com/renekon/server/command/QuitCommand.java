@@ -1,6 +1,5 @@
 package com.renekon.server.command;
 
-import com.renekon.shared.message.MessageFactory;
 import com.renekon.shared.connection.Connection;
 
 import java.util.Collection;
@@ -18,7 +17,7 @@ public class QuitCommand implements Command {
 
     @Override
     public void execute(Connection connection, Collection<Connection> knownConnections) {
-        connection.write(MessageFactory.createDisconnectMessage().getBytes());
+        connection.write(connection.messageFactory.createDisconnectMessage());
         connection.requestClose();
     }
 }

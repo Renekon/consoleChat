@@ -1,6 +1,5 @@
 package com.renekon.server.command;
 
-import com.renekon.shared.message.MessageFactory;
 import com.renekon.shared.connection.Connection;
 
 import java.util.Collection;
@@ -24,6 +23,6 @@ public class UsersListCommand implements Command {
             sb.append('\n');
             sb.append(c.name);
         }
-        connection.write(MessageFactory.createServerTextMessage(sb.toString()).getBytes());
+        connection.write(connection.messageFactory.createServerTextMessage(sb.toString()));
     }
 }

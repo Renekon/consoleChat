@@ -1,6 +1,10 @@
 package com.renekon.shared.connection;
 
 import com.renekon.shared.connection.buffer.ChatMessageBuffer;
+import com.renekon.shared.connection.buffer.MessageBuffer;
+import com.renekon.shared.message.NioMessage;
+import com.renekon.shared.message.Message;
+import com.renekon.shared.message.NioMessageFactory;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -8,7 +12,9 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
@@ -20,6 +26,7 @@ public class NioSocketConnection extends Connection {
 
     private final ConcurrentLinkedDeque<ByteBuffer> writeBuffers;
     private ByteBuffer readBuffer;
+    private MessageBuffer messageBuffer;
 
     private final Selector selector;
     public final SocketChannel channel;
@@ -38,8 +45,8 @@ public class NioSocketConnection extends Connection {
         this.writeBuffers = new ConcurrentLinkedDeque<>();
         this.readBuffer = ByteBuffer.allocate(INITIAL_READ_BUFFER_CAPACITY);
         this.mode = Mode.READ;
-        this.messageBuffer = new ChatMessageBuffer();
-
+        messageFactory = new NioMessageFactory();
+        messageBuffer = new ChatMessageBuffer();
     }
 
     public NioSocketConnection(Selector selector, SocketChannel channel,
@@ -54,7 +61,8 @@ public class NioSocketConnection extends Connection {
 
         this.writeBuffers = new ConcurrentLinkedDeque<>();
         this.readBuffer = ByteBuffer.allocate(INITIAL_READ_BUFFER_CAPACITY);
-
+        messageFactory = new NioMessageFactory();
+        messageBuffer = new ChatMessageBuffer();
         this.mode = Mode.READ;
     }
 
@@ -77,8 +85,9 @@ public class NioSocketConnection extends Connection {
     }
 
     @Override
-    public void write(byte[] src) {
-        writeBuffers.add(ByteBuffer.wrap(src));
+    public void write(Message src) {
+        byte[] bytes = ((NioMessage) src).getBytes();
+        writeBuffers.add(ByteBuffer.wrap(bytes));
         if (this.mode == Mode.READ) {
             this.mode = Mode.WRITE;
             modeChangeRequestQueue.add(new ModeChangeRequest(this, SelectionKey.OP_WRITE));
@@ -87,12 +96,20 @@ public class NioSocketConnection extends Connection {
     }
 
     @Override
-    public byte[] readData() {
+    public List<Message> readMessages() {
         readBuffer.flip();
         byte[] ret = new byte[readBuffer.limit()];
         readBuffer.get(ret);
         readBuffer.clear();
-        return ret;
+        messageBuffer.put(ret);
+        byte[] messageData = messageBuffer.getNextMessage();
+        List<Message> messages = new ArrayList<>();
+        while (messageData != null) {
+            Message message = ((NioMessageFactory) messageFactory).createFromBytes(messageData);
+            messages.add(message);
+            messageData = messageBuffer.getNextMessage();
+        }
+        return messages;
     }
 
     @Override
@@ -121,6 +138,8 @@ public class NioSocketConnection extends Connection {
             readBuffer = newBuffer;
         }
         modeChangeRequestQueue.add(new ModeChangeRequest(this, SelectionKey.OP_WRITE));
+        MessageBuffer messageBuffer = this.messageBuffer;
+
     }
 
     public boolean nothingToWrite() {

@@ -2,16 +2,16 @@ package com.renekon.server.connection;
 
 import com.renekon.server.command.Command;
 import com.renekon.server.command.CommandFactory;
-import com.renekon.shared.message.Message;
-import com.renekon.shared.message.MessageFactory;
-import com.renekon.shared.message.MessageType;
-import com.renekon.shared.message.handler.MessageHandler;
-import com.renekon.shared.message.handler.MessageHandlerFactory;
 import com.renekon.shared.connection.Connection;
 import com.renekon.shared.connection.event.ConnectionEvent;
 import com.renekon.shared.connection.event.DataReceivedEvent;
+import com.renekon.shared.message.Message;
+import com.renekon.shared.message.MessageType;
+import com.renekon.shared.message.handler.MessageHandler;
+import com.renekon.shared.message.handler.MessageHandlerFactory;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -27,13 +27,12 @@ public class ConnectionProcessor implements Runnable {
 
     private final MessageHandlerFactory messageHandlers = new MessageHandlerFactory();
 
-    private final ConcurrentLinkedQueue<byte[]> messageHistory;
+    private final ConcurrentLinkedQueue<Message> messageHistory;
 
     public ConnectionProcessor(ArrayBlockingQueue<ConnectionEvent> connectionEvents,
                                ConcurrentHashMap<String, Connection> knownConnections) {
         this.connectionEvents = connectionEvents;
         this.knownConnections = knownConnections;
-
         messageHistory = new ConcurrentLinkedQueue<>();
         registerMessageHandlers();
     }
@@ -45,7 +44,7 @@ public class ConnectionProcessor implements Runnable {
     }
 
     private MessageHandler disconnectHandler() {
-        return (message, connection) -> connection.write(message.getBytes());
+        return (message, connection) -> connection.write(message);
     }
 
     private MessageHandler nameSentHandler() {
@@ -65,7 +64,7 @@ public class ConnectionProcessor implements Runnable {
                 command.execute(connection, knownConnections.values());
             } else if (!message.getText().isEmpty()) {
                 synchronized (messageHistory) {
-                    messageHistory.add(message.getBytes());
+                    messageHistory.add(message);
                 }
                 shareMessage(message);
             }
@@ -87,32 +86,27 @@ public class ConnectionProcessor implements Runnable {
         }
     }
 
-    private void handleData(Connection connection, byte[] data) {
-        connection.messageBuffer.put(data);
-        byte[] messageBytes = connection.messageBuffer.getNextMessage();
-        while (messageBytes != null) {
-            Message message = MessageFactory.createFromBytes(messageBytes);
+    private void handleData(Connection connection, List<Message> messages) {
+        for (Message message : messages) {
             MessageHandler messageHandler = messageHandlers.get(message.getType());
             if (messageHandler != null) {
                 messageHandler.execute(message, connection);
             }
-            messageBytes = connection.messageBuffer.getNextMessage();
         }
     }
 
     private void handleClose(Connection connection) {
         if (connection.name != null && knownConnections.containsKey(connection.name)) {
             knownConnections.remove(connection.name);
-            shareMessage(MessageFactory.createServerTextMessage(connection.name + " left the chat."));
+            shareMessage(connection.messageFactory.createServerTextMessage(connection.name + " left the chat."));
             LOGGER.info(String.format("User %s disconnected, %d left", connection.name, knownConnections.size()));
         }
     }
 
 
     private void shareMessage(Message message) {
-        byte[] bytes = message.getBytes();
         for (Connection connection : knownConnections.values()) {
-            connection.write(bytes);
+            connection.write(message);
         }
     }
 
@@ -128,9 +122,9 @@ public class ConnectionProcessor implements Runnable {
             connection.name = name;
             sendServerMessage(connection, "Welcome to the chat! Type \\help for help.");
             knownConnections.put(name, connection);
-            shareMessage(MessageFactory.createServerTextMessage(name + " joined the chat!"));
+            shareMessage(connection.messageFactory.createServerTextMessage(name + " joined the chat!"));
             synchronized (messageHistory) {
-                Iterator<byte[]> iterator = messageHistory.iterator();
+                Iterator<Message> iterator = messageHistory.iterator();
                 for (int i = 0; i < HISTORY_SIZE && iterator.hasNext(); i++) {
                     connection.write(iterator.next());
                 }
@@ -141,15 +135,15 @@ public class ConnectionProcessor implements Runnable {
     }
 
     private void sendNameRequest(Connection connection) {
-        connection.write(MessageFactory.createNameRequestMessage().getBytes());
+        connection.write(connection.messageFactory.createNameRequestMessage());
     }
 
     private void sendServerMessage(Connection connection, String text) {
-        connection.write(MessageFactory.createServerTextMessage(text).getBytes());
+        connection.write(connection.messageFactory.createServerTextMessage(text));
     }
 
     private void sendNameAcceptedMessage(Connection connection, String name) {
-        connection.write(MessageFactory.createNameAcceptedMessage(name).getBytes());
+        connection.write(connection.messageFactory.createNameAcceptedMessage(name));
     }
 
     private void changeName(String newName, Connection connection) {
@@ -163,7 +157,7 @@ public class ConnectionProcessor implements Runnable {
             connection.name = newName;
             knownConnections.put(connection.name, connection);
             sendNameAcceptedMessage(connection, newName);
-            shareMessage(MessageFactory.createServerTextMessage(String.format("%s is now %s.", oldName, newName)));
+            shareMessage(connection.messageFactory.createServerTextMessage(String.format("%s is now %s.", oldName, newName)));
             LOGGER.info(String.format("User %s is renamed to %s", oldName, newName));
         }
     }
