@@ -138,7 +138,7 @@ public class NioSocketConnection extends Connection {
         changeSelectionMode(SelectionKey.OP_WRITE);
     }
 
-    private void changeSelectionMode(int key){
+    private void changeSelectionMode(int key) {
         modeChangeRequestQueue.add(new ModeChangeRequest(this, key));
     }
 

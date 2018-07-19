@@ -26,12 +26,11 @@ public class SpamBot extends Client {
     @Override
     void stop() {
         running = false;
-        System.out.println("Bot stopped");
         executorService.shutdown();
     }
 
     @Override
-    boolean hasInput(){
+    boolean hasInput() {
         try {
             Thread.sleep(ThreadLocalRandom.current().nextInt(MIN_WAIT_BEFORE_MESSAGE_MS, MAX_WAIT_BEFORE_MESSAGE_MS));
             return true;
@@ -42,7 +41,7 @@ public class SpamBot extends Client {
 
     @Override
     String readInput() {
-        int action = ThreadLocalRandom.current().nextInt(50);
+        int action = ThreadLocalRandom.current().nextInt(20);
         switch (action) {
             case 0:
                 return "/help";

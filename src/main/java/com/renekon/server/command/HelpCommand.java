@@ -9,6 +9,13 @@ public class HelpCommand implements Command {
 
     private final Pattern PATTERN = Pattern.compile("/help");
     private static final String DESCRIPTION = "/help --- show help";
+    private final static String[] lines = {
+            "Available commands:",
+            HelpCommand.DESCRIPTION,
+            ChangeNameCommand.DESCRIPTION,
+            UsersListCommand.DESCRIPTION,
+            QuitCommand.DESCRIPTION
+    };
 
     @Override
     public Pattern getPattern() {
@@ -17,13 +24,7 @@ public class HelpCommand implements Command {
 
     @Override
     public void execute(Connection connection, Collection<Connection> knownConnections) {
-        String[] lines = {
-                "Available commands:",
-                HelpCommand.DESCRIPTION,
-                ChangeNameCommand.DESCRIPTION,
-                UsersListCommand.DESCRIPTION,
-                QuitCommand.DESCRIPTION
-        };
+
         String message = String.join("\n", lines);
         connection.write(connection.messageFactory.createServerTextMessage(message));
     }

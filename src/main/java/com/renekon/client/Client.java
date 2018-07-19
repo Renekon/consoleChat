@@ -7,7 +7,6 @@ import com.renekon.shared.message.handler.MessageHandler;
 import com.renekon.shared.message.handler.MessageHandlerFactory;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -99,7 +98,7 @@ public class Client implements Runnable {
         System.out.println(text);
     }
 
-    boolean hasInput(){
+    boolean hasInput() {
         return scanner.hasNext();
     }
 
