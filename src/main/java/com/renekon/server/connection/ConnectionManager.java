@@ -1,7 +1,7 @@
 package com.renekon.server.connection;
 
 import com.renekon.shared.connection.Connection;
-import com.renekon.shared.connection.event.ConnectionEvent;
+import com.renekon.server.connection.event.ConnectionEvent;
 
 import java.util.concurrent.ArrayBlockingQueue;
 

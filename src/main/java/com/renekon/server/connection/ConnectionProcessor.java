@@ -2,9 +2,9 @@ package com.renekon.server.connection;
 
 import com.renekon.server.command.Command;
 import com.renekon.server.command.CommandFactory;
+import com.renekon.server.connection.event.ConnectionEvent;
+import com.renekon.server.connection.event.DataReceivedEvent;
 import com.renekon.shared.connection.Connection;
-import com.renekon.shared.connection.event.ConnectionEvent;
-import com.renekon.shared.connection.event.DataReceivedEvent;
 import com.renekon.shared.message.Message;
 import com.renekon.shared.message.MessageType;
 import com.renekon.shared.message.handler.MessageHandler;
@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class ConnectionProcessor implements Runnable {
@@ -26,7 +25,6 @@ public class ConnectionProcessor implements Runnable {
     private final ConcurrentHashMap<String, Connection> knownConnections;
 
     private final MessageHandlerFactory messageHandlers = new MessageHandlerFactory();
-
     private final ConcurrentLinkedQueue<Message> messageHistory;
 
     public ConnectionProcessor(ArrayBlockingQueue<ConnectionEvent> connectionEvents,
@@ -58,14 +56,18 @@ public class ConnectionProcessor implements Runnable {
             if (command != null) {
                 command.execute(connection, knownConnections.values());
             } else if (!message.getText().isEmpty()) {
-                synchronized (messageHistory) {
-                    if (messageHistory.size() > HISTORY_SIZE)
-                        messageHistory.poll();
-                    messageHistory.add(message);
-                }
+                saveMessageInHistory(message);
                 shareMessage(message);
             }
         };
+    }
+
+    private void saveMessageInHistory(Message message) {
+        synchronized (messageHistory) {
+            if (messageHistory.size() > HISTORY_SIZE)
+                messageHistory.poll();
+            messageHistory.add(message);
+        }
     }
 
     @Override
@@ -74,16 +76,16 @@ public class ConnectionProcessor implements Runnable {
             try {
                 ConnectionEvent connectionEvent = connectionEvents.take();
                 if (ConnectionEvent.Type.DATA.equals(connectionEvent.type))
-                    handleData(connectionEvent.connection, ((DataReceivedEvent) connectionEvent).data);
+                    handleMessages(connectionEvent.connection, ((DataReceivedEvent) connectionEvent).messages);
                 else if (ConnectionEvent.Type.CLOSE.equals(connectionEvent.type))
-                    handleClose(connectionEvent.connection);
+                    disconnectUser(connectionEvent.connection);
             } catch (InterruptedException e) {
-                LOGGER.log(Level.WARNING, "Interrupted while taking ConnectionEvent from queue", e);
+                LOGGER.info("Interrupted while taking ConnectionEvent from queue");
             }
         }
     }
 
-    private void handleData(Connection connection, List<Message> messages) {
+    private void handleMessages(Connection connection, List<Message> messages) {
         for (Message message : messages) {
             MessageHandler messageHandler = messageHandlers.get(message.getType());
             if (messageHandler != null) {
@@ -92,7 +94,7 @@ public class ConnectionProcessor implements Runnable {
         }
     }
 
-    private void handleClose(Connection connection) {
+    private void disconnectUser(Connection connection) {
         if (connection.name != null && knownConnections.containsKey(connection.name)) {
             knownConnections.remove(connection.name);
             shareMessage(connection.messageFactory.createServerTextMessage(connection.name + " left the chat."));
@@ -108,26 +110,37 @@ public class ConnectionProcessor implements Runnable {
     }
 
     private void registerNewConnection(String name, Connection connection) {
-        if (name.isEmpty()) {
+        if (checkIfNameIsValid(name, connection)) {
+            sendNameAcceptedMessage(connection, name);
+            shareMessage(connection.messageFactory.createServerTextMessage(name + " joined the chat!"));
+            LOGGER.info(String.format("User %d is registered as %s", knownConnections.size(), name));
+            sendServerMessage(connection, "Welcome to the chat! Type /help to see list of commands");
+            connection.name = name;
+            knownConnections.put(name, connection);
+            sendChatHistory(connection);
+        }
+    }
+
+    private boolean checkIfNameIsValid(String name, Connection connection) {
+        boolean valid = true;
+        if (name.replaceAll("\\s", "").isEmpty()) {
             sendServerMessage(connection, "The name must be non-empty");
-            sendNameRequest(connection);
+            valid = false;
         } else if (knownConnections.containsKey(name)) {
             sendServerMessage(connection, "The name is already used");
+            valid = false;
+        }
+        if (!valid && connection.name == null)
             sendNameRequest(connection);
-        } else {
-            sendNameAcceptedMessage(connection, name);
-            connection.name = name;
-            sendServerMessage(connection, "Welcome to the chat! Type \\help for help.");
-            knownConnections.put(name, connection);
-            shareMessage(connection.messageFactory.createServerTextMessage(name + " joined the chat!"));
-            synchronized (messageHistory) {
-                Iterator<Message> iterator = messageHistory.iterator();
-                for (int i = 0; i < HISTORY_SIZE && iterator.hasNext(); i++) {
-                    connection.write(iterator.next());
-                }
+        return valid;
+    }
 
+    private void sendChatHistory(Connection connection) {
+        synchronized (messageHistory) {
+            Iterator<Message> iterator = messageHistory.iterator();
+            for (int i = 0; i < HISTORY_SIZE && iterator.hasNext(); i++) {
+                connection.write(iterator.next());
             }
-            LOGGER.info(String.format("User %d is registered as %s", knownConnections.size(), name));
         }
     }
 
@@ -144,18 +157,11 @@ public class ConnectionProcessor implements Runnable {
     }
 
     private void changeName(String newName, Connection connection) {
-        if (newName.isEmpty()) {
-            sendServerMessage(connection, "The name must be non-empty");
-        } else if (knownConnections.containsKey(newName)) {
-            sendServerMessage(connection, "The name is already used");
-        } else {
-            String oldName = connection.name;
-            knownConnections.remove(connection.name);
-            connection.name = newName;
-            knownConnections.put(connection.name, connection);
+        if (checkIfNameIsValid(newName, connection)) {
             sendNameAcceptedMessage(connection, newName);
-            shareMessage(connection.messageFactory.createServerTextMessage(String.format("%s is now %s.", oldName, newName)));
-            LOGGER.info(String.format("User %s is renamed to %s", oldName, newName));
+            shareMessage(connection.messageFactory.createServerTextMessage(String.format("%s is now %s.", connection.name, newName)));
+            LOGGER.info(String.format("User %s is renamed to %s", connection.name, newName));
+            connection.name = newName;
         }
     }
 }

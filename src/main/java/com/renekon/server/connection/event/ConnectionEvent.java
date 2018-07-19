@@ -1,4 +1,4 @@
-package com.renekon.shared.connection.event;
+package com.renekon.server.connection.event;
 
 import com.renekon.shared.connection.Connection;
 

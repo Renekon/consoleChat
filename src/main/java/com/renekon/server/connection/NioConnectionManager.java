@@ -1,11 +1,11 @@
 package com.renekon.server.connection;
 
+import com.renekon.server.connection.event.CloseConnectionEvent;
+import com.renekon.server.connection.event.ConnectionEvent;
+import com.renekon.server.connection.event.DataReceivedEvent;
 import com.renekon.shared.connection.Connection;
 import com.renekon.shared.connection.ModeChangeRequestQueue;
 import com.renekon.shared.connection.NioSocketConnection;
-import com.renekon.shared.connection.event.CloseConnectionEvent;
-import com.renekon.shared.connection.event.ConnectionEvent;
-import com.renekon.shared.connection.event.DataReceivedEvent;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -58,17 +58,21 @@ public class NioConnectionManager implements ConnectionManager {
             while (selectedKeys.hasNext()) {
                 currentSelectionKey = selectedKeys.next();
                 selectedKeys.remove();
-                if (!currentSelectionKey.isValid()) {
-                    continue;
-                }
-                if (currentSelectionKey.isAcceptable()) {
-                    accept();
-                } else if (currentSelectionKey.isReadable()) {
-                    read();
-                } else if (currentSelectionKey.isWritable()) {
-                    write();
-                }
+                handleCurrentKey();
             }
+        }
+    }
+
+    private void handleCurrentKey() {
+        if (!currentSelectionKey.isValid()) {
+            return;
+        }
+        if (currentSelectionKey.isAcceptable()) {
+            accept();
+        } else if (currentSelectionKey.isReadable()) {
+            read();
+        } else if (currentSelectionKey.isWritable()) {
+            write();
         }
     }
 
@@ -78,7 +82,7 @@ public class NioConnectionManager implements ConnectionManager {
         try {
             ServerSocketChannel serverSocketChannel = (ServerSocketChannel) currentSelectionKey.channel();
             socketChannel = serverSocketChannel.accept();
-            logWarning("Connection from " + socketChannel.getRemoteAddress().toString());
+            LOGGER.warning("Connection from " + socketChannel.getRemoteAddress().toString());
         } catch (IOException e) {
             logWarning("Error accepting connection", e);
             return;
@@ -90,7 +94,7 @@ public class NioConnectionManager implements ConnectionManager {
         } catch (IOException e) {
             logWarning("Error creating connection from SocketChannel", e);
         } catch (InterruptedException e) {
-            logWarning("Interrupted while putting new Connection");
+            LOGGER.warning("Interrupted while putting new Connection");
         }
     }
 
@@ -105,7 +109,7 @@ public class NioConnectionManager implements ConnectionManager {
             currentSelectionKey.cancel();
             close(connection);
         } catch (InterruptedException e) {
-            logWarning("Interrupted while putting DATA ConnectionEvent");
+            LOGGER.warning("Interrupted while putting DATA ConnectionEvent");
         }
     }
 
@@ -130,12 +134,8 @@ public class NioConnectionManager implements ConnectionManager {
         } catch (IOException e) {
             logWarning("Error closing connection", e);
         } catch (InterruptedException e) {
-            logWarning("Interrupted while putting CLOSE ConnectionEvent");
+            LOGGER.warning("Interrupted while putting CLOSE ConnectionEvent");
         }
-    }
-
-    private void logWarning(String msg) {
-        LOGGER.log(Level.WARNING, msg);
     }
 
     private void logWarning(String msg, Throwable e) {

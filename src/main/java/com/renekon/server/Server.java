@@ -3,8 +3,8 @@ package com.renekon.server;
 import com.renekon.server.connection.ConnectionAcceptor;
 import com.renekon.server.connection.ConnectionManager;
 import com.renekon.server.connection.ConnectionProcessor;
+import com.renekon.server.connection.event.ConnectionEvent;
 import com.renekon.shared.connection.Connection;
-import com.renekon.shared.connection.event.ConnectionEvent;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
