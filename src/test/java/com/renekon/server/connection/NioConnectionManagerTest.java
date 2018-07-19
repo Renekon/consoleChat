@@ -38,6 +38,20 @@ class NioConnectionManagerTest {
         c.writeToChannel();
         Thread.sleep(500);
         ConnectionEvent event = connectionManager.connectionEvents.peek();
+        Assertions.assertNotNull(event);
         Assertions.assertEquals(ConnectionEvent.Type.DATA, event.type);
+    }
+
+    @Test
+    void closeConnection() throws IOException {
+        InetSocketAddress address = new InetSocketAddress(5003);
+        NioConnectionManager connectionManager = new NioConnectionManager(address);
+        connectionManager.bindConnectionQueues(new ArrayBlockingQueue<>(1), new ArrayBlockingQueue<>(1));
+        Thread selectionThread = new Thread(connectionManager, "connectionManager");
+        selectionThread.start();
+        Connection c = new NioSocketConnection(address);
+        Assertions.assertTrue(((NioSocketConnection) c).channel.isOpen());
+        connectionManager.close(c);
+        Assertions.assertFalse(((NioSocketConnection) c).channel.isOpen());
     }
 }

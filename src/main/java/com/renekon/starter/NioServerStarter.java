@@ -7,7 +7,7 @@ import com.renekon.server.connection.NioConnectionManager;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
-class StartNioServer {
+class NioServerStarter {
     private static final int PORT = 5000;
 
     public static void main(String[] args) throws IOException {

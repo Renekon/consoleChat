@@ -24,4 +24,13 @@ class ChatMessageBufferTest {
         byte[] m3 = {2, 3, 4, 5, Message.MESSAGE_END};
         Assertions.assertArrayEquals(m3, buffer.getNextMessage());
     }
+    @Test
+    void testBufferExpansion(){
+        ChatMessageBuffer buffer = new ChatMessageBuffer();
+        byte[] bytes = {1, 2, 3, 4, 5, 6, 7, Message.MESSAGE_END};
+        for (int i = 0; i < 20; i++){
+            buffer.put(bytes);
+        }
+        Assertions.assertArrayEquals(bytes, buffer.getNextMessage());
+    }
 }

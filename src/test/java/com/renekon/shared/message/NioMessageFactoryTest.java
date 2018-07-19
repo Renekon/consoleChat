@@ -18,18 +18,30 @@ class NioMessageFactoryTest {
 
         for (Message message : messages) {
             Message messageFromBytes = messageFactory.createFromBytes(((NioMessage) message).getBytes());
-//            Assertions.assertEquals(message, messageFromBytes);
+            Assertions.assertEquals(message.getType(), messageFromBytes.getType());
+            Assertions.assertEquals(message.getAuthor(), messageFromBytes.getAuthor());
+            Assertions.assertEquals(message.getText(), messageFromBytes.getText());
         }
+        Assertions.assertNull(messageFactory.createFromBytes(null));
     }
 
     @Test
     void testInvalidMessageException() {
         NioMessageFactory messageFactory = new NioMessageFactory();
-        Message message = messageFactory.createUserTextMessage("Lena", "bye");
-        byte[] bytes = ((NioMessage) message).getBytes();
-        bytes[2] = (byte) 'X';
 
+        Assertions.assertNull(messageFactory.createFromBytes(null));
         Assertions.assertThrows(MessageFactory.InvalidMessageException.class,
-                () -> messageFactory.createFromBytes(bytes));
+                () -> messageFactory.createFromBytes(new byte[0]));
+
+        Message message = messageFactory.createUserTextMessage("Lena", "bye");
+        byte[] messageWithInvalidType = ((NioMessage) message).getBytes();
+        messageWithInvalidType[2] = (byte) 'X';
+        Assertions.assertThrows(MessageFactory.InvalidMessageException.class,
+                () -> messageFactory.createFromBytes(messageWithInvalidType));
+
+        byte[] messageWithNotEnoughFields = {2, Message.FIELD_DELIMITER, 5, Message.MESSAGE_END};
+        Assertions.assertThrows(MessageFactory.InvalidMessageException.class,
+                () -> messageFactory.createFromBytes(messageWithNotEnoughFields));
+
     }
 }

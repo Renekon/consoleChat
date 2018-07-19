@@ -21,7 +21,7 @@ public class Client implements Runnable {
 
     ScheduledExecutorService executorService;
 
-    private final MessageHandlerFactory messageHandlers = new MessageHandlerFactory();
+    final MessageHandlerFactory messageHandlers = new MessageHandlerFactory();
 
     public Client(Connection connection) {
         this.connection = connection;
@@ -47,7 +47,7 @@ public class Client implements Runnable {
         writeToChannel();
     }
 
-    private void startInputScanner() {
+    void startInputScanner() {
         executorService.scheduleWithFixedDelay(() -> {
             if (connection.shouldClose())
                 stop();
@@ -73,14 +73,17 @@ public class Client implements Runnable {
         } catch (IOException e) {
             stop();
         }
-        List<Message> messages = connection.readMessages();
-        for (Message message : messages) {
-            if (message.getText() != null)
-                displayText(message.getAuthor() + ": " + message.getText());
-            MessageHandler handler = messageHandlers.get(message.getType());
-            if (handler != null) {
-                handler.execute(message, connection);
-            }
+        for (Message message : connection.readMessages()) {
+            handleMessage(message);
+        }
+    }
+
+    private void handleMessage(Message message) {
+        if (message.getText() != null)
+            displayText(message.getAuthor() + ": " + message.getText());
+        MessageHandler handler = messageHandlers.get(message.getType());
+        if (handler != null) {
+            handler.execute(message, connection);
         }
     }
 

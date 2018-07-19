@@ -21,5 +21,8 @@ class CommandFactoryTest {
 
         command = CommandFactory.fromString("/somecommand sdfsd  ");
         Assertions.assertTrue(UnknownCommand.class.isInstance(command));
+
+        command = CommandFactory.fromString("somecommand");
+        Assertions.assertNull(command);
     }
 }

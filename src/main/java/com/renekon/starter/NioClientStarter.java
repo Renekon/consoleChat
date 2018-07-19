@@ -6,7 +6,7 @@ import com.renekon.shared.connection.NioSocketConnection;
 
 import java.net.InetSocketAddress;
 
-class StartNioClient {
+class NioClientStarter {
     private static final int PORT = 5000;
 
     static public void main(String[] args) throws Exception {
