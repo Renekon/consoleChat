@@ -6,32 +6,43 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class SpamBot extends Client {
     static private final String LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    static private final int MAX_WAIT_BEFORE_MESSAGE_MS = 250;
+    static private final int MIN_WAIT_BEFORE_MESSAGE_MS = 500;
+    static private final int MAX_WAIT_BEFORE_MESSAGE_MS = 1000;
     static private final int MAX_MESSAGE_LENGTH = 100;
 
-    private final ThreadLocalRandom rng;
 
     private String randomString(int length) {
         char[] letters = new char[length];
         for (int i = 0; i < length; ++i) {
-            letters[i] = LETTERS.charAt(rng.nextInt(LETTERS.length()));
+            letters[i] = LETTERS.charAt(ThreadLocalRandom.current().nextInt(LETTERS.length()));
         }
         return new String(letters);
     }
 
     public SpamBot(Connection connection) {
         super(connection);
-        rng = ThreadLocalRandom.current();
+    }
+
+    @Override
+    void stop() {
+        running = false;
+        System.out.println("Bot stopped");
+        executorService.shutdown();
+    }
+
+    @Override
+    boolean hasInput(){
+        try {
+            Thread.sleep(ThreadLocalRandom.current().nextInt(MIN_WAIT_BEFORE_MESSAGE_MS, MAX_WAIT_BEFORE_MESSAGE_MS));
+            return true;
+        } catch (InterruptedException ignored) {
+            return false;
+        }
     }
 
     @Override
     String readInput() {
-        try {
-            Thread.sleep(rng.nextInt(MAX_WAIT_BEFORE_MESSAGE_MS));
-        } catch (InterruptedException ignored) {
-        }
-
-        int action = rng.nextInt(10);
+        int action = ThreadLocalRandom.current().nextInt(50);
         switch (action) {
             case 0:
                 return "/help";
@@ -42,7 +53,7 @@ public class SpamBot extends Client {
             case 3:
                 return "/quit";
             default:
-                return randomString(rng.nextInt(MAX_MESSAGE_LENGTH));
+                return randomString(ThreadLocalRandom.current().nextInt(MAX_MESSAGE_LENGTH));
         }
     }
 

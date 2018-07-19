@@ -17,9 +17,9 @@ public class Client implements Runnable {
     private final Scanner scanner = new Scanner(System.in);
     private Connection connection;
 
-    private volatile boolean running;
+    volatile boolean running;
 
-    private ScheduledExecutorService executorService;
+    ScheduledExecutorService executorService;
 
     private final MessageHandlerFactory messageHandlers = new MessageHandlerFactory();
 
@@ -39,7 +39,7 @@ public class Client implements Runnable {
             connection.name = message.getAuthor();
         });
         messageHandlers.register(MessageType.NAME_SENT, (message, connection) -> sendMessage(message));
-        messageHandlers.register(MessageType.DISCONNECT, (message, connection) -> stop());
+        messageHandlers.register(MessageType.DISCONNECT, (message, connection) -> connection.requestClose());
     }
 
     private void sendMessage(Message message) {
@@ -49,7 +49,9 @@ public class Client implements Runnable {
 
     private void startInputScanner() {
         executorService.scheduleWithFixedDelay(() -> {
-            if (scanner.hasNext())
+            if (connection.shouldClose())
+                stop();
+            if (hasInput())
                 sendMessage(connection.messageFactory.createUserTextMessage(connection.name, readInput()));
         }, 100, 200, TimeUnit.MILLISECONDS);
     }
@@ -58,12 +60,11 @@ public class Client implements Runnable {
     public void run() {
         running = true;
         while (running) {
+            if (connection.shouldClose())
+                stop();
             if (connection.canRead())
                 readFromChannel();
         }
-        displayText("Disconnected from server");
-        executorService.shutdown();
-        System.exit(0);
     }
 
     private void readFromChannel() {
@@ -95,11 +96,17 @@ public class Client implements Runnable {
         System.out.println(text);
     }
 
+    boolean hasInput(){
+        return scanner.hasNext();
+    }
+
     String readInput() {
         return scanner.nextLine();
     }
 
-    public void stop() {
+    void stop() {
         running = false;
+        executorService.shutdown();
+        System.exit(0);
     }
 }

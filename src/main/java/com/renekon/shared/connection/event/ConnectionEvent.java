@@ -8,7 +8,7 @@ abstract public class ConnectionEvent {
     public final Type type;
     public final Connection connection;
 
-    public ConnectionEvent(Type type, Connection connection) {
+    ConnectionEvent(Type type, Connection connection) {
         this.type = type;
         this.connection = connection;
     }

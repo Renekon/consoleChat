@@ -17,7 +17,8 @@ public class QuitCommand implements Command {
 
     @Override
     public void execute(Connection connection, Collection<Connection> knownConnections) {
-        connection.write(connection.messageFactory.createDisconnectMessage());
         connection.requestClose();
+        connection.write(connection.messageFactory.createServerTextMessage("Good bye!"));
+        connection.write(connection.messageFactory.createDisconnectMessage());
     }
 }

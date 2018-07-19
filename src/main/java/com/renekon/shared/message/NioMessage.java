@@ -21,13 +21,6 @@ public class NioMessage implements Message {
         return type;
     }
 
-    public byte[] getBytes() {
-        String separator = Character.toString((char) FIELD_DELIMITER);
-        String end = Character.toString((char) MESSAGE_END);
-        String string = type.toString() + separator + author + separator + text + end;
-        return string.getBytes(CHARSET);
-    }
-
     @Override
     public String getText() {
         return text;
@@ -36,5 +29,12 @@ public class NioMessage implements Message {
     @Override
     public String getAuthor() {
         return author;
+    }
+
+    public byte[] getBytes() {
+        String separator = Character.toString((char) FIELD_DELIMITER);
+        String end = Character.toString((char) MESSAGE_END);
+        String string = type.toString() + separator + author + separator + text + end;
+        return string.getBytes(CHARSET);
     }
 }

@@ -74,10 +74,9 @@ public class NioConnectionManager implements ConnectionManager {
 
     @Override
     public void accept() {
-        ServerSocketChannel serverSocketChannel = (ServerSocketChannel) currentSelectionKey.channel();
-
         SocketChannel socketChannel;
         try {
+            ServerSocketChannel serverSocketChannel = (ServerSocketChannel) currentSelectionKey.channel();
             socketChannel = serverSocketChannel.accept();
             logWarning("Connection from " + socketChannel.getRemoteAddress().toString());
         } catch (IOException e) {
@@ -85,9 +84,8 @@ public class NioConnectionManager implements ConnectionManager {
             return;
         }
 
-        NioSocketConnection connection;
         try {
-            connection = new NioSocketConnection(selector, socketChannel, modeChangeRequestQueue);
+            NioSocketConnection connection = new NioSocketConnection(selector, socketChannel, modeChangeRequestQueue);
             newConnections.put(connection);
         } catch (IOException e) {
             logWarning("Error creating connection from SocketChannel", e);
@@ -99,11 +97,11 @@ public class NioConnectionManager implements ConnectionManager {
     @Override
     public void read() {
         NioSocketConnection connection = (NioSocketConnection) currentSelectionKey.attachment();
-
         try {
             connection.readFromChannel();
             connectionEvents.put(new DataReceivedEvent(connection));
         } catch (IOException e) {
+            logWarning("Error reading from channel", e);
             currentSelectionKey.cancel();
             close(connection);
         } catch (InterruptedException e) {
@@ -116,12 +114,10 @@ public class NioConnectionManager implements ConnectionManager {
         NioSocketConnection connection = (NioSocketConnection) currentSelectionKey.attachment();
         try {
             connection.writeToChannel();
+            if (connection.shouldClose() && connection.nothingToWrite())
+                close(connection);
         } catch (IOException e) {
-            close(connection);
-            return;
-        }
-
-        if (connection.shouldClose() && connection.nothingToWrite()) {
+            logWarning("Error writing to channel", e);
             close(connection);
         }
     }

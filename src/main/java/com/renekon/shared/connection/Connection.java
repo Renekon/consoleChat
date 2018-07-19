@@ -8,6 +8,7 @@ import java.util.List;
 
 public abstract class Connection {
     public MessageFactory messageFactory;
+
     public volatile String name = null;
 
     private volatile boolean shouldClose = false;

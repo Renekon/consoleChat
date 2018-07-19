@@ -8,10 +8,12 @@ import com.renekon.shared.connection.NioSocketConnection;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 class StartLoadTest {
     private static final int PORT = 5000;
-    private static final int DEFAULT_BOT_COUNT = 2000;
+    private static final int DEFAULT_BOT_COUNT = 5000;
 
     public static void main(String[] args) throws IOException {
         int botCount;
@@ -22,18 +24,13 @@ class StartLoadTest {
         }
 
         ArrayList<Client> clients = new ArrayList<>();
+        ExecutorService executorService = Executors.newCachedThreadPool();
         for (int i = 0; i < botCount; ++i) {
+
             Connection connection = new NioSocketConnection(new InetSocketAddress(PORT));
             Client client = new SpamBot(connection);
             clients.add(client);
-            Thread t = new Thread(client);
-            t.start();
+            executorService.execute(client);
         }
-
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            for (Client client : clients) {
-                client.stop();
-            }
-        }));
     }
 }

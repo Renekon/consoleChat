@@ -40,11 +40,6 @@ public class ConnectionProcessor implements Runnable {
     private void registerMessageHandlers() {
         messageHandlers.register(MessageType.USER_TEXT, userTextHandler());
         messageHandlers.register(MessageType.NAME_SENT, nameSentHandler());
-        messageHandlers.register(MessageType.DISCONNECT, disconnectHandler());
-    }
-
-    private MessageHandler disconnectHandler() {
-        return (message, connection) -> connection.write(message);
     }
 
     private MessageHandler nameSentHandler() {
@@ -64,6 +59,8 @@ public class ConnectionProcessor implements Runnable {
                 command.execute(connection, knownConnections.values());
             } else if (!message.getText().isEmpty()) {
                 synchronized (messageHistory) {
+                    if (messageHistory.size() > HISTORY_SIZE)
+                        messageHistory.poll();
                     messageHistory.add(message);
                 }
                 shareMessage(message);
