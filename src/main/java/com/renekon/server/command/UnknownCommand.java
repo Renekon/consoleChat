@@ -14,6 +14,6 @@ class UnknownCommand implements Command {
 
     @Override
     public void execute(Connection connection, Collection<Connection> knownConnections) {
-        connection.write(connection.messageFactory.createServerTextMessage("There is no such command. Type /help to see the list"));
+        connection.write(Connection.messageFactory.createServerTextMessage("There is no such command. Type /help to see the list"));
     }
 }

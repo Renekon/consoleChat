@@ -17,7 +17,7 @@ class NioSocketConnectionTest {
         serverChannel.configureBlocking(false);
         Connection c = new NioSocketConnection(address);
         Assertions.assertTrue(((NioSocketConnection) c).nothingToWrite());
-        c.write(c.messageFactory.createNameRequestMessage());
+        c.write(Connection.messageFactory.createNameRequestMessage());
         Assertions.assertFalse(((NioSocketConnection) c).nothingToWrite());
     }
 
@@ -30,7 +30,7 @@ class NioSocketConnectionTest {
         serverChannel.configureBlocking(false);
         Connection c = new NioSocketConnection(address);
 
-        c.write(c.messageFactory.createNameRequestMessage());
+        c.write(Connection.messageFactory.createNameRequestMessage());
         Assertions.assertFalse(((NioSocketConnection) c).nothingToWrite());
         c.writeToChannel();
         Assertions.assertTrue(((NioSocketConnection) c).nothingToWrite());

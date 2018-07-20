@@ -25,8 +25,8 @@ public class ConnectionAcceptor implements Runnable {
                 LOGGER.log(Level.WARNING, "Interrupting while taking connection from queue", e);
                 continue;
             }
-            connection.write(connection.messageFactory.createServerTextMessage("Hello! What is your name?"));
-            connection.write(connection.messageFactory.createNameRequestMessage());
+            connection.write(Connection.messageFactory.createServerTextMessage("Hello! What is your name?"));
+            connection.write(Connection.messageFactory.createNameRequestMessage());
         }
     }
 }

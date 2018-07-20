@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.util.List;
 
 public abstract class Connection {
-    public MessageFactory messageFactory;
+    public static MessageFactory messageFactory;
 
     public volatile String name = null;
 

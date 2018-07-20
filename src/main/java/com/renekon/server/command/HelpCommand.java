@@ -26,6 +26,6 @@ public class HelpCommand implements Command {
     public void execute(Connection connection, Collection<Connection> knownConnections) {
 
         String message = String.join("\n", lines);
-        connection.write(connection.messageFactory.createServerTextMessage(message));
+        connection.write(Connection.messageFactory.createServerTextMessage(message));
     }
 }

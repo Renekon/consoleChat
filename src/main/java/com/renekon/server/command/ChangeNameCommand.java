@@ -27,6 +27,6 @@ public class ChangeNameCommand implements Command {
 
     @Override
     public void execute(Connection connection, Collection<Connection> knownConnections) {
-        connection.write(connection.messageFactory.createNameSentMessage(name));
+        connection.write(Connection.messageFactory.createNameSentMessage(name));
     }
 }

@@ -3,7 +3,7 @@ package com.renekon.shared.message;
 public class NioMessageFactory extends MessageFactory {
     private final static String delimiter = Character.toString((char) Message.FIELD_DELIMITER);
 
-    public Message createFromBytes(byte[] bytes) throws InvalidMessageException {
+    public static Message createFromBytes(byte[] bytes) throws InvalidMessageException {
         if (!bytesAreValid(bytes))
             return null;
         String[] fields = extractMessageFields(bytes);

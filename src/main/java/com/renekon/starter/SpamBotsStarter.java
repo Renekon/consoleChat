@@ -10,13 +10,15 @@ import java.net.InetSocketAddress;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.logging.Logger;
 
 class SpamBotsStarter {
+    private static final Logger LOGGER = Logger.getLogger(SpamBotsStarter.class.getName());
     private static final int PORT = 5000;
-    private static final int DEFAULT_BOT_COUNT = 1000;
+    private static final int DEFAULT_BOT_COUNT = 5000;
     private static ExecutorService executorService;
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         executorService = Executors.newCachedThreadPool();
         runSpamBotThreads(getBotCount(args));
         startReadingInput();
@@ -29,11 +31,16 @@ class SpamBotsStarter {
             return DEFAULT_BOT_COUNT;
     }
 
-    private static void runSpamBotThreads(int botCount) throws IOException {
+    private static void runSpamBotThreads(int botCount) {
         for (int i = 0; i < botCount; ++i) {
-            Connection connection = new NioSocketConnection(new InetSocketAddress(PORT));
-            Client client = new SpamBot(connection);
-            executorService.execute(client);
+            try {
+                Connection connection = new NioSocketConnection(new InetSocketAddress(PORT));
+                Client client = new SpamBot(connection);
+                executorService.execute(client);
+            } catch (IOException e) {
+                LOGGER.warning("Connection refused");
+            }
+
         }
     }
 

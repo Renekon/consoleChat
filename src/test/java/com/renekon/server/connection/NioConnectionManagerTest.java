@@ -34,7 +34,7 @@ class NioConnectionManagerTest {
         Thread selectionThread = new Thread(connectionManager, "connectionManager");
         selectionThread.start();
         Connection c = new NioSocketConnection(address);
-        c.write(c.messageFactory.createNameRequestMessage());
+        c.write(Connection.messageFactory.createNameRequestMessage());
         c.writeToChannel();
         Thread.sleep(200);
         ConnectionEvent event = connectionManager.connectionEvents.peek();

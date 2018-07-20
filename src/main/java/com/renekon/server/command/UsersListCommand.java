@@ -23,6 +23,6 @@ public class UsersListCommand implements Command {
             sb.append('\n');
             sb.append(c.name);
         }
-        connection.write(connection.messageFactory.createServerTextMessage(sb.toString()));
+        connection.write(Connection.messageFactory.createServerTextMessage(sb.toString()));
     }
 }

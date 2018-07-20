@@ -31,7 +31,7 @@ public class Client implements Runnable {
 
     private void registerMessageHandlers() {
         messageHandlers.register(MessageType.NAME_REQUEST, (message, connection) ->
-                sendMessage(connection.messageFactory.createNameSentMessage(readInput())));
+                sendMessage(Connection.messageFactory.createNameSentMessage(readInput())));
         messageHandlers.register(MessageType.NAME_ACCEPTED, (message, connection) -> {
             if (connection.name == null)
                 startInputScanner();
@@ -51,7 +51,7 @@ public class Client implements Runnable {
             if (connection.shouldClose())
                 stop();
             if (hasInput())
-                sendMessage(connection.messageFactory.createUserTextMessage(connection.name, readInput()));
+                sendMessage(Connection.messageFactory.createUserTextMessage(connection.name, readInput()));
         }, 100, 200, TimeUnit.MILLISECONDS);
     }
 

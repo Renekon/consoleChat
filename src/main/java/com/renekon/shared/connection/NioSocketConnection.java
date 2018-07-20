@@ -105,7 +105,7 @@ public class NioSocketConnection extends Connection {
         byte[] messageData = messageBuffer.getNextMessage();
         List<Message> messages = new ArrayList<>();
         while (messageData != null) {
-            Message message = ((NioMessageFactory) messageFactory).createFromBytes(messageData);
+            Message message = NioMessageFactory.createFromBytes(messageData);
             messages.add(message);
             messageData = messageBuffer.getNextMessage();
         }

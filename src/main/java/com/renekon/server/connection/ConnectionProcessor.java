@@ -97,7 +97,7 @@ public class ConnectionProcessor implements Runnable {
     private void disconnectUser(Connection connection) {
         if (connection.name != null && knownConnections.containsKey(connection.name)) {
             knownConnections.remove(connection.name);
-            shareMessage(connection.messageFactory.createServerTextMessage(connection.name + " left the chat."));
+            shareMessage(Connection.messageFactory.createServerTextMessage(connection.name + " left the chat."));
             LOGGER.info(String.format("User %s disconnected, %d left", connection.name, knownConnections.size()));
         }
     }
@@ -112,7 +112,7 @@ public class ConnectionProcessor implements Runnable {
     private void registerNewConnection(String name, Connection connection) {
         if (checkIfNameIsValid(name, connection)) {
             sendNameAcceptedMessage(connection, name);
-            shareMessage(connection.messageFactory.createServerTextMessage(name + " joined the chat!"));
+            shareMessage(Connection.messageFactory.createServerTextMessage(name + " joined the chat!"));
             LOGGER.info(String.format("User %d is registered as %s", knownConnections.size(), name));
             sendServerMessage(connection, "Welcome to the chat! Type /help to see list of commands");
             connection.name = name;
@@ -145,21 +145,21 @@ public class ConnectionProcessor implements Runnable {
     }
 
     private void sendNameRequest(Connection connection) {
-        connection.write(connection.messageFactory.createNameRequestMessage());
+        connection.write(Connection.messageFactory.createNameRequestMessage());
     }
 
     private void sendServerMessage(Connection connection, String text) {
-        connection.write(connection.messageFactory.createServerTextMessage(text));
+        connection.write(Connection.messageFactory.createServerTextMessage(text));
     }
 
     private void sendNameAcceptedMessage(Connection connection, String name) {
-        connection.write(connection.messageFactory.createNameAcceptedMessage(name));
+        connection.write(Connection.messageFactory.createNameAcceptedMessage(name));
     }
 
     private void changeName(String newName, Connection connection) {
         if (checkIfNameIsValid(newName, connection)) {
             sendNameAcceptedMessage(connection, newName);
-            shareMessage(connection.messageFactory.createServerTextMessage(String.format("%s is now %s.", connection.name, newName)));
+            shareMessage(Connection.messageFactory.createServerTextMessage(String.format("%s is now %s.", connection.name, newName)));
             LOGGER.info(String.format("User %s is renamed to %s", connection.name, newName));
             connection.name = newName;
         }
