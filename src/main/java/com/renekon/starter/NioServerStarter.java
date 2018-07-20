@@ -17,5 +17,6 @@ class NioServerStarter {
         ConnectionManager connectionManager = new NioConnectionManager(new InetSocketAddress(PORT));
         Server server = new Server(connectionManager, CONNECT_QUEUE_CAPACITY, CONNECT_EVENT_QUEUE_CAPACITY);
         server.start(PROCESSOR_THREADS_NUM);
+        System.out.println("Server started");
     }
 }

@@ -5,6 +5,8 @@ User can send messages and some commands, like /users and /changename.
 ##Prerequisites
 This application uses maven build system.
 To build and run application computer must have `JRE 1.8+` and `Apache Maven` installed
+##Running in IDE
+To run chat in IDE you can use classes in `starter` package
 ##Building and Running
 #####1. Build jar files:
 `mvn package`
