@@ -11,7 +11,7 @@ class NioServerStarter {
     private static final int PORT = 5000;
     private static final int CONNECT_QUEUE_CAPACITY = 100;
     private static final int CONNECT_EVENT_QUEUE_CAPACITY = 100;
-    private static final int PROCESSOR_THREADS_NUM = 100;
+    private static final int PROCESSOR_THREADS_NUM = 1;
 
     public static void main(String[] args) throws IOException {
         ConnectionManager connectionManager = new NioConnectionManager(new InetSocketAddress(PORT));

@@ -15,7 +15,7 @@ import java.util.logging.Logger;
 class SpamBotsStarter {
     private static final Logger LOGGER = Logger.getLogger(SpamBotsStarter.class.getName());
     private static final int PORT = 5000;
-    private static final int DEFAULT_BOT_COUNT = 5000;
+    private static final int DEFAULT_BOT_COUNT = 1000;
     private static ExecutorService executorService;
 
     public static void main(String[] args) {
