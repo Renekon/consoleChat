@@ -1,7 +1,6 @@
 package com.renekon.shared.connection;
 
-import com.renekon.shared.connection.buffer.ChatMessageBuffer;
-import com.renekon.shared.connection.buffer.MessageBuffer;
+import com.renekon.shared.connection.buffer.NioMessageBuffer;
 import com.renekon.shared.message.Message;
 import com.renekon.shared.message.NioMessage;
 import com.renekon.shared.message.NioMessageFactory;
@@ -26,7 +25,7 @@ public class NioSocketConnection extends Connection {
 
     private ConcurrentLinkedDeque<ByteBuffer> writeBuffers;
     private ByteBuffer readBuffer;
-    private MessageBuffer messageBuffer;
+    private NioMessageBuffer nioMessageBuffer;
 
     private final Selector selector;
     public final SocketChannel channel;
@@ -62,7 +61,7 @@ public class NioSocketConnection extends Connection {
         writeBuffers = new ConcurrentLinkedDeque<>();
         this.readBuffer = ByteBuffer.allocate(INITIAL_READ_BUFFER_CAPACITY);
         messageFactory = new NioMessageFactory();
-        messageBuffer = new ChatMessageBuffer();
+        nioMessageBuffer = new NioMessageBuffer();
         this.mode = Mode.READ;
     }
 
@@ -101,13 +100,13 @@ public class NioSocketConnection extends Connection {
         byte[] ret = new byte[readBuffer.limit()];
         readBuffer.get(ret);
         readBuffer.clear();
-        messageBuffer.put(ret);
-        byte[] messageData = messageBuffer.getNextMessage();
+        nioMessageBuffer.put(ret);
+        byte[] messageData = nioMessageBuffer.getNextMessage();
         List<Message> messages = new ArrayList<>();
         while (messageData != null) {
             Message message = NioMessageFactory.createFromBytes(messageData);
             messages.add(message);
-            messageData = messageBuffer.getNextMessage();
+            messageData = nioMessageBuffer.getNextMessage();
         }
         return messages;
     }

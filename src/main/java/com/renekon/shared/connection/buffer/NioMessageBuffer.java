@@ -4,16 +4,15 @@ import com.renekon.shared.message.Message;
 
 import java.nio.ByteBuffer;
 
-public class ChatMessageBuffer implements MessageBuffer {
+public class NioMessageBuffer {
     private static final int INITIAL_CAPACITY = 128;
     private static final int RESIZE_FACTOR = 2;
     private ByteBuffer buffer;
 
-    public ChatMessageBuffer() {
+    public NioMessageBuffer() {
         buffer = ByteBuffer.allocate(INITIAL_CAPACITY);
     }
 
-    @Override
     public void put(byte[] data) {
         int requiredCapacity = buffer.position() + data.length;
         if (requiredCapacity > buffer.capacity()) {
@@ -25,7 +24,6 @@ public class ChatMessageBuffer implements MessageBuffer {
         buffer.put(data);
     }
 
-    @Override
     public byte[] getNextMessage() {
         return ByteBufferCutter.cut(buffer, Message.MESSAGE_END);
     }

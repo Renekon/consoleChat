@@ -4,10 +4,10 @@ import com.renekon.shared.message.Message;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-class ChatMessageBufferTest {
+class NioMessageBufferTest {
     @Test
     void testPutAndGetNext() {
-        ChatMessageBuffer buffer = new ChatMessageBuffer();
+        NioMessageBuffer buffer = new NioMessageBuffer();
 
         byte[] m1 = {1, 2, 3, Message.MESSAGE_END};
         byte[] m2 = {4, 5, 6, 7, Message.MESSAGE_END};
@@ -26,7 +26,7 @@ class ChatMessageBufferTest {
     }
     @Test
     void testBufferExpansion(){
-        ChatMessageBuffer buffer = new ChatMessageBuffer();
+        NioMessageBuffer buffer = new NioMessageBuffer();
         byte[] bytes = {1, 2, 3, 4, 5, 6, 7, Message.MESSAGE_END};
         for (int i = 0; i < 20; i++){
             buffer.put(bytes);
